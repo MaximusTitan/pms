@@ -379,7 +379,6 @@ export function AffiliateUI() {
 
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-4xl font-bold mb-8">Affiliate Management</h1>
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex justify-between items-center">

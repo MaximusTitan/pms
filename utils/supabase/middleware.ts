@@ -52,7 +52,7 @@ export const updateSession = async (request: NextRequest) => {
 
     // Redirect / to /tools if the user is authenticated
     if (request.nextUrl.pathname === "/" && !error) {
-      return NextResponse.redirect(new URL("/tools", request.url));
+      return NextResponse.redirect(new URL("/", request.url));
     }
 
     // Allow the request to proceed for other cases
