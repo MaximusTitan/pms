@@ -1,295 +1,217 @@
 "use client";
 
-import { useState, ChangeEvent } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { ProgramCard } from "@/components/ProgramCard";
+import { CreateProgramDialog } from "@/components/CreateProgramDialog";
+import { Program } from "@/types/program";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-
-interface Program {
-  id: string;
-  name: string;
-  landing_page_url: string;
-  commission_type: string;
-  commission_value: number;
-  currency: string;
-  recurring_commission: boolean;
-  media_files: {
-    images: string[];
-    videos: string[];
-    pdfs: string[];
-  };
-}
-
-interface FileInputState {
-  images: string;
-  videos: string;
-  pdfs: string;
-}
 
 export default function ProgramsPage() {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [isCreating, setIsCreating] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const supabase = createClient();
 
-  const [formData, setFormData] = useState({
-    name: "",
-    landing_page_url: "",
-    commission_type: "fixed",
-    commission_value: 0,
-    currency: "USD",
-    recurring_commission: false,
-    media_files: {
-      images: [],
-      videos: [],
-      pdfs: [],
-    },
-  });
+  useEffect(() => {
+    async function fetchPrograms() {
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
 
-  // Add new state for file inputs
-  const [fileInputs, setFileInputs] = useState<FileInputState>({
-    images: "",
-    videos: "",
-    pdfs: "",
-  });
+        if (userError) {
+          console.error("Authentication error:", userError.message);
+          toast({
+            title: "Authentication Error",
+            description: "Please sign in to view your programs",
+            variant: "destructive",
+          });
+          return;
+        }
 
-  const handleCreateProgram = async () => {
-    setLoading(true);
+        if (!user) {
+          toast({
+            title: "Not Authenticated",
+            description: "Please sign in to view your programs",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        // Fetch programs without specifying relationships
+        const { data: programsData, error: programsError } = await supabase
+          .from("programs")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (programsError) {
+          console.error("Database error:", programsError.message);
+          throw new Error(`Failed to fetch programs: ${programsError.message}`);
+        }
+
+        if (!programsData) {
+          console.warn("No programs found");
+          setPrograms([]);
+          return;
+        }
+
+        interface MediaFile {
+          images: string[];
+          videos: string[];
+          pdfs: string[];
+        }
+
+        interface ProgramData extends Omit<Program, "media_files"> {
+          media_files?: {
+            images?: string[];
+            videos?: string[];
+            pdfs?: string[];
+          };
+        }
+
+        interface ProgramWithUrls extends Program {
+          media_files: MediaFile;
+        }
+
+        const programsWithUrls: ProgramWithUrls[] = programsData.map(
+          (program: ProgramData) => ({
+            ...program,
+            media_files: {
+              images: (program.media_files?.images || []).map(
+                (filePath: string) => {
+                  const { data: publicData } = supabase.storage
+                    .from("program-media")
+                    .getPublicUrl(filePath);
+                  return publicData?.publicUrl || filePath;
+                }
+              ),
+              videos: (program.media_files?.videos || []).map(
+                (filePath: string) => {
+                  const { data: publicData } = supabase.storage
+                    .from("program-media")
+                    .getPublicUrl(filePath);
+                  return publicData?.publicUrl || filePath;
+                }
+              ),
+              pdfs: (program.media_files?.pdfs || []).map(
+                (filePath: string) => {
+                  const { data: publicData } = supabase.storage
+                    .from("program-media")
+                    .getPublicUrl(filePath);
+                  return publicData?.publicUrl || filePath;
+                }
+              ),
+            },
+          })
+        );
+
+        setPrograms(programsWithUrls);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error occurred";
+        console.error("Error fetching programs:", errorMessage);
+
+        toast({
+          title: "Error",
+          description: errorMessage || "Unknown error occurred",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchPrograms();
+  }, [supabase, toast]);
+
+  const handleProgramCreated = async (program: Program) => {
     try {
+      // Fetch the newly created program data without specifying relationships
       const { data, error } = await supabase
         .from("programs")
-        .insert([formData])
-        .select();
+        .select("*")
+        .eq("id", program.id)
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching created program:", error.message);
+        throw new Error(`Failed to fetch program data: ${error.message}`);
+      }
 
-      setPrograms([...programs, data[0]]);
+      if (!data) {
+        throw new Error("No program data returned");
+      }
+
+      const programWithUrls = {
+        ...data,
+        media_files: {
+          images: Array.isArray(data.media_files?.images)
+            ? data.media_files.images.map((filePath: string) => {
+                const { data: publicData } = supabase.storage
+                  .from("program-media")
+                  .getPublicUrl(filePath);
+
+                return publicData?.publicUrl || filePath;
+              })
+            : [],
+          videos: Array.isArray(data.media_files?.videos)
+            ? data.media_files.videos.map((filePath: string) => {
+                const { data: publicData } = supabase.storage
+                  .from("program-media")
+                  .getPublicUrl(filePath);
+
+                return publicData?.publicUrl || filePath;
+              })
+            : [],
+          pdfs: Array.isArray(data.media_files?.pdfs)
+            ? data.media_files.pdfs.map((filePath: string) => {
+                const { data: publicData } = supabase.storage
+                  .from("program-media")
+                  .getPublicUrl(filePath);
+
+                return publicData?.publicUrl || filePath;
+              })
+            : [],
+        },
+      };
+
+      setPrograms((prevPrograms) => [programWithUrls, ...prevPrograms]);
       setIsCreating(false);
+
       toast({
         title: "Success",
         description: "Program created successfully",
       });
     } catch (error) {
+      console.error("Error handling created program:", {
+        error,
+        message: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
       toast({
-        title: "Error",
-        description: "Failed to create program",
+        title: "Warning",
+        description: `Program created but failed to refresh data: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`,
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
-  const handleFileChange = async (
-    e: ChangeEvent<HTMLInputElement>,
-    type: "images" | "videos" | "pdfs"
-  ) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      setLoading(true);
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${type}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("program-media")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("program-media").getPublicUrl(filePath);
-
-      setFormData((prev) => ({
-        ...prev,
-        media_files: {
-          ...prev.media_files,
-          [type]: [...prev.media_files[type], publicUrl],
-        },
-      }));
-
-      // Reset the specific file input after successful upload
-      setFileInputs((prev) => ({
-        ...prev,
-        [type]: "",
-      }));
-
-      toast({
-        title: "Success",
-        description: "File uploaded successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to upload file",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Program Name</Label>
-              <Input
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label>Landing Page URL</Label>
-              <Input
-                value={formData.landing_page_url}
-                onChange={(e) =>
-                  setFormData({ ...formData, landing_page_url: e.target.value })
-                }
-              />
-            </div>
-          </div>
-        );
-      case 2:
-        return (
-          <div className="space-y-4">
-            <div>
-              <Label>Commission Type</Label>
-              <Select
-                onValueChange={(value) =>
-                  setFormData({ ...formData, commission_type: value })
-                }
-                defaultValue={formData.commission_type}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select commission type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fixed">Fixed Commission</SelectItem>
-                  <SelectItem value="percentage">
-                    Percentage per Transaction
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Commission Value</Label>
-              <Input
-                type="number"
-                value={formData.commission_value}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    commission_value: parseFloat(e.target.value),
-                  })
-                }
-              />
-            </div>
-            <div>
-              <Label>Currency</Label>
-              <Select
-                onValueChange={(value) =>
-                  setFormData({ ...formData, currency: value })
-                }
-                defaultValue={formData.currency}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="INR">INR</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
-      case 3:
-        return (
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="images">Images</Label>
-              <Input
-                id="images"
-                type="file"
-                accept="image/*"
-                onChange={(e) => handleFileChange(e, "images")}
-                disabled={loading}
-                value={fileInputs.images}
-                key={fileInputs.images} // Force re-render on reset
-              />
-              {formData.media_files.images.length > 0 && (
-                <div className="text-sm text-gray-500">
-                  {formData.media_files.images.length} image(s) uploaded
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="videos">Videos</Label>
-              <Input
-                id="videos"
-                type="file"
-                accept="video/*"
-                onChange={(e) => handleFileChange(e, "videos")}
-                disabled={loading}
-                value={fileInputs.videos}
-                key={fileInputs.videos}
-              />
-              {formData.media_files.videos.length > 0 && (
-                <div className="text-sm text-gray-500">
-                  {formData.media_files.videos.length} video(s) uploaded
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="pdfs">PDF Documents</Label>
-              <Input
-                id="pdfs"
-                type="file"
-                accept=".pdf"
-                onChange={(e) => handleFileChange(e, "pdfs")}
-                disabled={loading}
-                value={fileInputs.pdfs}
-                key={fileInputs.pdfs}
-              />
-              {formData.media_files.pdfs.length > 0 && (
-                <div className="text-sm text-gray-500">
-                  {formData.media_files.pdfs.length} PDF(s) uploaded
-                </div>
-              )}
-            </div>
-          </div>
-        );
-    }
-  };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8">
@@ -303,74 +225,25 @@ export default function ProgramsPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {programs.map((program) => (
-          <Card key={program.id} className="dark:bg-neutral-800">
-            <CardHeader>
-              <CardTitle className="text-xl text-rose-500">
-                {program.name}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <p>
-                  <span className="font-semibold">Commission:</span>{" "}
-                  {program.commission_value} {program.currency}
-                </p>
-                <p>
-                  <span className="font-semibold">Type:</span>{" "}
-                  {program.commission_type}
-                </p>
-                <p>
-                  <span className="font-semibold">Recurring:</span>{" "}
-                  {program.recurring_commission ? "Yes" : "No"}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {programs.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500">
+            No programs created yet. Create your first program!
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {programs.map((program) => (
+            <ProgramCard key={program.id} program={program} />
+          ))}
+        </div>
+      )}
 
-      <Dialog open={isCreating} onOpenChange={setIsCreating}>
-        <DialogContent className="sm:max-w-[425px] dark:bg-neutral-950">
-          <DialogHeader>
-            <DialogTitle>Create New Program</DialogTitle>
-          </DialogHeader>
-
-          {renderStep()}
-
-          <div className="flex justify-between mt-4">
-            {currentStep > 1 && (
-              <Button
-                variant="outline"
-                onClick={() => setCurrentStep(currentStep - 1)}
-              >
-                Previous
-              </Button>
-            )}
-            {currentStep < 3 ? (
-              <Button
-                className="bg-rose-500 hover:bg-rose-600 text-white ml-auto"
-                onClick={() => setCurrentStep(currentStep + 1)}
-              >
-                Next
-              </Button>
-            ) : (
-              <Button
-                className="bg-rose-500 hover:bg-rose-600 text-white ml-auto"
-                onClick={handleCreateProgram}
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="animate-spin" />
-                ) : (
-                  "Create Program"
-                )}
-              </Button>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <CreateProgramDialog
+        open={isCreating}
+        onOpenChange={setIsCreating}
+        onSuccess={handleProgramCreated}
+      />
     </div>
   );
 }
