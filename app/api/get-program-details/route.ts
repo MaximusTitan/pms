@@ -1,6 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { NextRequest } from "next/server";
-import { Program } from "@/types/database";
+import type { Program } from "@/types/database";
 
 export async function GET(req: NextRequest) {
   const programId = req.nextUrl.searchParams.get("programId");
