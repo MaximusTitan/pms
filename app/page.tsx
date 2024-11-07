@@ -27,7 +27,7 @@ export default function LandingPage() {
               size="lg"
               className="bg-rose-500 hover:bg-rose-600 text-white"
             >
-              <Link href="/partner">Become a Partner</Link>
+              <Link href="/sign-up">Become a Partner</Link>
             </Button>
             <Button
               size="lg"
