@@ -23,15 +23,16 @@ interface Program {
 }
 
 interface PageProps {
-  params: {
-    programid: string;
-  };
+  params: Promise<{ programid: string }>;
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
 // Add metadata generation
-export async function generateMetadata(props: PageProps): Promise<Metadata> {
-  const params = await props.params; // Await the params
-  const program = await getProgram(params.programid);
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const resolvedParams = await params;
+  const program = await getProgram(resolvedParams.programid);
 
   return {
     title: program ? `Manage ${program.name}` : "Program Not Found",
@@ -39,8 +40,6 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 }
 
 async function getProgram(programId: string): Promise<Program | null> {
-  const supabase = await createClient();
-
   // Check if we have valid programId
   if (!programId || programId === "undefined") {
     console.error("Invalid program ID received:", programId);
@@ -48,6 +47,9 @@ async function getProgram(programId: string): Promise<Program | null> {
   }
 
   try {
+    // Initialize Supabase client
+    const supabase = await createClient();
+
     // Get authenticated user
     const {
       data: { user },
@@ -79,32 +81,27 @@ async function getProgram(programId: string): Promise<Program | null> {
 
     // Get public URLs for media files if they exist
     if (program?.media_files) {
-      interface MediaFile {
-        publicUrl: string;
-      }
+      const getUrls = async (paths: string[] = []) => {
+        return Promise.all(
+          paths.map(async (path) => {
+            const { data } = supabase.storage
+              .from("program-media")
+              .getPublicUrl(path);
+            return data.publicUrl;
+          })
+        );
+      };
+
+      const [images, videos, pdfs] = await Promise.all([
+        getUrls(program.media_files.images),
+        getUrls(program.media_files.videos),
+        getUrls(program.media_files.pdfs),
+      ]);
 
       program.media_files = {
-        images:
-          program.media_files.images?.map((path: string) => {
-            const { data } = supabase.storage
-              .from("program-media")
-              .getPublicUrl(path);
-            return data.publicUrl;
-          }) || [],
-        videos:
-          program.media_files.videos?.map((path: string) => {
-            const { data } = supabase.storage
-              .from("program-media")
-              .getPublicUrl(path);
-            return data.publicUrl;
-          }) || [],
-        pdfs:
-          program.media_files.pdfs?.map((path: string) => {
-            const { data } = supabase.storage
-              .from("program-media")
-              .getPublicUrl(path);
-            return data.publicUrl;
-          }) || [],
+        images,
+        videos,
+        pdfs,
       };
     }
 
@@ -115,12 +112,15 @@ async function getProgram(programId: string): Promise<Program | null> {
   }
 }
 
-export default async function ProgramManagePage(props: PageProps) {
-  const params = await props.params; // Await the params
-  const program = await getProgram(params.programid);
+export default async function ProgramManagePage({
+  params,
+  searchParams,
+}: PageProps) {
+  const resolvedParams = await params;
+  const program = await getProgram(resolvedParams.programid);
 
   if (!program) {
-    return notFound();
+    notFound();
   }
 
   return (
