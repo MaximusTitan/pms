@@ -22,14 +22,15 @@ interface Program {
   user_id: string;
 }
 
-interface PageProps {
+type PageProps = {
   params: Promise<{ programid: string }>;
-  searchParams: { [key: string]: string | string[] | undefined };
-}
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
 
 // Add metadata generation
 export async function generateMetadata({
   params,
+  searchParams,
 }: PageProps): Promise<Metadata> {
   const resolvedParams = await params;
   const program = await getProgram(resolvedParams.programid);
@@ -117,6 +118,7 @@ export default async function ProgramManagePage({
   searchParams,
 }: PageProps) {
   const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
   const program = await getProgram(resolvedParams.programid);
 
   if (!program) {
