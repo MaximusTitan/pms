@@ -2,13 +2,13 @@ import { ProgramNavigation } from "@/components/program-navigation";
 
 interface LayoutProps {
   children: React.ReactNode;
-  params: {
-    programid: string; // Changed to 'programid' to match the route
-  };
+  params: Promise<{
+    programid: string;
+  }>;
 }
 
 export default async function Layout({ children, params }: LayoutProps) {
-  const { programid } = await params; // Await the params
+  const { programid } = await params;
   return (
     <div className="flex min-h-screen">
       <ProgramNavigation programId={programid} />

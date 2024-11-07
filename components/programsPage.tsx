@@ -16,6 +16,17 @@ export default function ProgramsPage() {
   const { toast } = useToast();
   const supabase = createClient();
 
+  // Add a helper function to fetch public URLs in parallel
+  const fetchPublicUrls = async (filePaths: string[]) => {
+    const promises = filePaths.map((filePath) => {
+      const { data: publicData } = supabase.storage
+        .from("program-media")
+        .getPublicUrl(filePath);
+      return publicData?.publicUrl || filePath;
+    });
+    return Promise.all(promises);
+  };
+
   useEffect(() => {
     async function fetchPrograms() {
       try {
@@ -79,36 +90,15 @@ export default function ProgramsPage() {
           media_files: MediaFile;
         }
 
-        const programsWithUrls: ProgramWithUrls[] = programsData.map(
-          (program: ProgramData) => ({
+        const programsWithUrls: ProgramWithUrls[] = await Promise.all(
+          programsData.map(async (program: ProgramData) => ({
             ...program,
             media_files: {
-              images: (program.media_files?.images || []).map(
-                (filePath: string) => {
-                  const { data: publicData } = supabase.storage
-                    .from("program-media")
-                    .getPublicUrl(filePath);
-                  return publicData?.publicUrl || filePath;
-                }
-              ),
-              videos: (program.media_files?.videos || []).map(
-                (filePath: string) => {
-                  const { data: publicData } = supabase.storage
-                    .from("program-media")
-                    .getPublicUrl(filePath);
-                  return publicData?.publicUrl || filePath;
-                }
-              ),
-              pdfs: (program.media_files?.pdfs || []).map(
-                (filePath: string) => {
-                  const { data: publicData } = supabase.storage
-                    .from("program-media")
-                    .getPublicUrl(filePath);
-                  return publicData?.publicUrl || filePath;
-                }
-              ),
+              images: await fetchPublicUrls(program.media_files?.images || []),
+              videos: await fetchPublicUrls(program.media_files?.videos || []),
+              pdfs: await fetchPublicUrls(program.media_files?.pdfs || []),
             },
-          })
+          }))
         );
 
         setPrograms(programsWithUrls);
@@ -151,33 +141,9 @@ export default function ProgramsPage() {
       const programWithUrls = {
         ...data,
         media_files: {
-          images: Array.isArray(data.media_files?.images)
-            ? data.media_files.images.map((filePath: string) => {
-                const { data: publicData } = supabase.storage
-                  .from("program-media")
-                  .getPublicUrl(filePath);
-
-                return publicData?.publicUrl || filePath;
-              })
-            : [],
-          videos: Array.isArray(data.media_files?.videos)
-            ? data.media_files.videos.map((filePath: string) => {
-                const { data: publicData } = supabase.storage
-                  .from("program-media")
-                  .getPublicUrl(filePath);
-
-                return publicData?.publicUrl || filePath;
-              })
-            : [],
-          pdfs: Array.isArray(data.media_files?.pdfs)
-            ? data.media_files.pdfs.map((filePath: string) => {
-                const { data: publicData } = supabase.storage
-                  .from("program-media")
-                  .getPublicUrl(filePath);
-
-                return publicData?.publicUrl || filePath;
-              })
-            : [],
+          images: await fetchPublicUrls(data.media_files?.images || []),
+          videos: await fetchPublicUrls(data.media_files?.videos || []),
+          pdfs: await fetchPublicUrls(data.media_files?.pdfs || []),
         },
       };
 
@@ -233,9 +199,10 @@ export default function ProgramsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {programs.map((program) => (
-            <ProgramCard key={program.id} program={program} />
-          ))}
+          {programs.map((program) => {
+            console.log("Rendering program card with ID:", program.id);
+            return <ProgramCard key={program.id} program={program} />;
+          })}
         </div>
       )}
 
