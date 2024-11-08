@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import MediaManager from "@/components/MediaManager";
+import MediaManager from "@/app/admin/programs/[programid]/manage/MediaManager";
 
 export interface Program {
   id: string;
