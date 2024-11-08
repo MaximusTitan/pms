@@ -19,7 +19,6 @@ export default function ClientLayout({
     pathname.startsWith("/admin") ||
     pathname.startsWith("/partner") ||
     pathname.startsWith("/dashboard") ||
-    pathname.startsWith("/rooms") ||
     pathname.startsWith("/programs");
 
   return (

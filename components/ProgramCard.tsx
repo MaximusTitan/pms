@@ -17,6 +17,12 @@ interface ProgramCardProps {
 export function ProgramCard({ program }: ProgramCardProps) {
   const router = useRouter();
 
+  const handleManageClick = () => {
+    const programPath = `/admin/programs/${program.id}/manage`;
+    console.log("Navigating to:", programPath, "Program ID:", program.id);
+    router.push(programPath);
+  };
+
   return (
     <Card className="dark:bg-neutral-800">
       <CardHeader>
@@ -59,7 +65,7 @@ export function ProgramCard({ program }: ProgramCardProps) {
       </CardContent>
       <CardFooter>
         <Button
-          onClick={() => router.push(`/admin/programs/${program.id}/manage`)}
+          onClick={handleManageClick}
           className="w-full bg-rose-500 hover:bg-rose-600"
         >
           Manage Program

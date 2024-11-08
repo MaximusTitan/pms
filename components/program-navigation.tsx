@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 interface ProgramNavigationProps {
-  programId: string;
+  programId: string; // This prop remains as 'programId'
 }
 
 export function ProgramNavigation({ programId }: ProgramNavigationProps) {

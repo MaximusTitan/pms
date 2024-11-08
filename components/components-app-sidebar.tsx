@@ -1,7 +1,5 @@
-"use client";
-
 import { useEffect, useState } from "react";
-import { createClient } from "@/utils/supabase/client"; // Supabase client import
+import { createClient } from "@/utils/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -42,35 +40,54 @@ import {
 import Link from "next/link";
 import { ThemeSwitcher } from "./theme-switcher";
 import { signOutAction } from "@/app/actions";
+import { useRouter } from "next/navigation";
 
-const navData = {
-  navMain: [
-    { title: "Dashboard", url: "/admin", icon: SquareTerminal, isActive: true },
-    { title: "Affiliate", url: "/admin/affiliates", icon: Bot },
-    { title: "Programs", url: "/admin/programs", icon: BookOpen },
-    { title: "Reports", url: "/admin/reports", icon: Settings2 },
-  ],
-};
+const adminNavData = [
+  { title: "Dashboard", url: "/admin", icon: SquareTerminal, isActive: true },
+  { title: "Affiliate", url: "/admin/affiliates", icon: Bot },
+  { title: "Programs", url: "/admin/programs", icon: BookOpen },
+  { title: "Reports", url: "/admin/reports", icon: Settings2 },
+];
+
+const partnerNavData = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: SquareTerminal,
+    isActive: true,
+  },
+  { title: "Programs", url: "/programs", icon: Bot },
+];
+
+const authorizedEmails = ["yohan@igebra.ai"];
 
 export function AppSidebar() {
-  const [userEmail, setUserEmail] = useState("guest@example.com"); // Default email
-  const { state } = useSidebar(); // Add this line to get sidebar state
+  const [userEmail, setUserEmail] = useState("guest@example.com");
+  const { state } = useSidebar();
+  const router = useRouter();
+  const [navData, setNavData] = useState(partnerNavData);
 
-  // Fetch the user session from Supabase
   useEffect(() => {
     const fetchUser = async () => {
-      const supabase = createClient(); // Initialize Supabase client
+      const supabase = createClient();
       const {
         data: { user },
-      } = await supabase.auth.getUser(); // Get user session
+      } = await supabase.auth.getUser();
 
       if (user) {
-        setUserEmail(user.email ?? "guest@example.com"); // Set email from the user session
+        setUserEmail(user.email ?? "guest@example.com");
+
+        // Determine the appropriate navigation data based on the user's email
+        if (authorizedEmails.includes(user.email ?? "guest@example.com")) {
+          setNavData(adminNavData);
+        } else {
+          setNavData(partnerNavData);
+        }
       }
     };
 
     fetchUser();
-  }, []);
+  }, [router]);
 
   return (
     <Sidebar collapsible="icon">
@@ -95,7 +112,7 @@ export function AppSidebar() {
       <SidebarContent className="mt-4">
         <SidebarGroup>
           <SidebarMenu>
-            {navData.navMain.map((item) => (
+            {navData.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton tooltip={item.title} asChild>
                   <Link href={item.url}>
