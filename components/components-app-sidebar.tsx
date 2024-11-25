@@ -59,7 +59,12 @@ const partnerNavData = [
   { title: "Programs", url: "/programs", icon: Bot },
 ];
 
-const authorizedEmails = ["yohan@igebra.ai"];
+const getAdminEmails = () => {
+  const emails = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
+  return emails.split(",").map((email) => email.trim());
+};
+
+const authorizedEmails = getAdminEmails();
 
 export function AppSidebar() {
   const [userEmail, setUserEmail] = useState("guest@example.com");

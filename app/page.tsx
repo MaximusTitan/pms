@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function LandingPage() {
   return (
@@ -15,8 +16,15 @@ export default function LandingPage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center space-y-6"
         >
-          <h1 className="text-4xl md:text-6xl font-bold text-neutral-800 dark:text-white">
-            Grow with <span className="text-rose-500">iSchool of AI</span>
+          <Image
+            src="https://wdfrtqeljulkoqnllxad.supabase.co/storage/v1/object/public/generated-images/images/isa.avif?t=2024-11-25T14%3A30%3A02.502Z"
+            alt="Grow with iSchool of AI"
+            width={400}
+            height={200}
+            className="mx-auto"
+          />
+          <h1 className="text-2xl md:text-4xl font-bold text-neutral-800 dark:text-white">
+            <span className="text-rose-500">Advance with us</span>
           </h1>
           <p className="text-xl text-neutral-600 dark:text-neutral-300 max-w-2xl mx-auto">
             Join our affiliate program and earn competitive commissions by
@@ -87,7 +95,7 @@ export default function LandingPage() {
 const features = [
   {
     title: "High Commissions",
-    description: "Earn up to 30% commission on every successful referral",
+    description: "Earn attractive commission on every successful referral",
     icon: (props: any) => (
       <svg
         {...props}

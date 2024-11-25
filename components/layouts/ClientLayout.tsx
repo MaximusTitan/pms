@@ -25,7 +25,7 @@ export default function ClientLayout({
     <SidebarProvider>
       <ThemeProvider
         attribute="class"
-        defaultTheme="system"
+        defaultTheme="light"
         enableSystem
         disableTransitionOnChange
       >
