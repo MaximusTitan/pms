@@ -46,17 +46,17 @@ interface AssignedAffiliate {
 }
 
 type PageProps = {
-  params: { programid: string };
-  searchParams: { [key: string]: string | string[] | undefined };
+  params: {
+    programid: string;
+  };
+  searchParams?: { [key: string]: string | string[] | undefined };
 };
 
 // Metadata generation function
 export async function generateMetadata({
   params,
-  searchParams,
 }: PageProps): Promise<Metadata> {
-  const awaitedParams = await Promise.resolve(params);
-  const program = await getProgram(awaitedParams.programid);
+  const program = await getProgram(params.programid);
 
   return {
     title: program ? `Manage ${program.name}` : "Program Not Found",
@@ -129,12 +129,8 @@ async function getProgram(programId: string): Promise<Program | null> {
   }
 }
 
-export default async function ProgramManagePage({
-  params,
-  searchParams,
-}: PageProps) {
-  const awaitedParams = await Promise.resolve(params);
-  const program = await getProgram(awaitedParams.programid);
+export default async function ProgramManagePage({ params }: PageProps) {
+  const program = await getProgram(params.programid);
 
   if (!program) {
     notFound();
