@@ -69,7 +69,7 @@ export default function AdditionalLinksForm({
         <button
           type="button"
           onClick={handleAddLink}
-          className="p-2 bg-blue-500 text-white rounded"
+          className="p-2 bg-rose-500 text-white rounded"
         >
           Add New Link
         </button>

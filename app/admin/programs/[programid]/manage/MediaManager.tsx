@@ -24,7 +24,7 @@ const MediaManager: React.FC<MediaManagerProps> = ({ mediaFiles }) => {
     <div>
       <button
         onClick={handleUpload}
-        className="mb-4 p-2 bg-blue-500 text-white rounded"
+        className="mb-4 p-2 bg-rose-500 text-white rounded"
       >
         Upload Media
       </button>
@@ -40,7 +40,7 @@ const MediaManager: React.FC<MediaManagerProps> = ({ mediaFiles }) => {
                   return (
                     <div
                       key={index}
-                      className="group relative rounded-lg overflow-hidden border hover:border-blue-500 transition-all duration-200"
+                      className="group relative rounded-lg overflow-hidden border hover:border-rose-500 transition-all duration-200"
                     >
                       <div className="aspect-video">
                         {type === "images" ? (

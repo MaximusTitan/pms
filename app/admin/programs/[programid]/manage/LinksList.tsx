@@ -50,7 +50,7 @@ const LinksList: React.FC<LinksListProps> = ({ programId, links }) => {
           {links.map((link, index) => (
             <li key={index} className="flex items-start">
               <div className="flex-1">
-                <p className="font-semibold text-blue-600 hover:underline">
+                <p className="font-semibold text-rose-500 hover:underline">
                   {link.title}
                 </p>
                 {link.description && (

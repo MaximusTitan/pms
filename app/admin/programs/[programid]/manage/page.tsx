@@ -10,6 +10,15 @@ import AffiliateAssignmentForm from "./AffiliateAssignmentForm"; // Client Compo
 import LinksList from "./LinksList"; // Client Component
 import ProgramManageClient from "./ProgramManageClient"; // Import the new client component
 
+// Add segment configuration
+export const dynamic = "force-dynamic";
+export const runtime = "edge";
+
+// Add dynamic segment configuration
+type PageParams = {
+  programid: string;
+};
+
 interface Program {
   id: string;
   name: string;
@@ -45,27 +54,30 @@ interface AssignedAffiliate {
   affiliate: Affiliate;
 }
 
-type PageProps = {
-  params: {
-    programid: string;
-  };
-  searchParams?: { [key: string]: string | string[] | undefined };
-};
-
-// Metadata generation function
+// Update metadata function to await params
 export async function generateMetadata({
   params,
-}: PageProps): Promise<Metadata> {
-  const program = await getProgram(params.programid);
-
-  return {
-    title: program ? `Manage ${program.name}` : "Program Not Found",
-  };
+}: {
+  params: Promise<PageParams> | PageParams;
+}): Promise<Metadata> {
+  try {
+    const resolvedParams = await params;
+    const program = await getProgram(resolvedParams.programid);
+    return {
+      title: program ? `Manage ${program.name}` : "Program Not Found",
+      description: program ? `Manage program: ${program.name}` : undefined,
+    };
+  } catch (error) {
+    console.error("Metadata generation error:", error);
+    return {
+      title: "Program Management",
+    };
+  }
 }
 
-// Fetch program details
+// Strengthen error handling in getProgram
 async function getProgram(programId: string): Promise<Program | null> {
-  if (!programId || programId === "undefined") {
+  if (!programId || typeof programId !== "string") {
     console.error("Invalid program ID received:", programId);
     return null;
   }
@@ -129,66 +141,77 @@ async function getProgram(programId: string): Promise<Program | null> {
   }
 }
 
-export default async function ProgramManagePage({ params }: PageProps) {
-  const program = await getProgram(params.programid);
+// Update page component to await params
+export default async function ProgramManagePage({
+  params,
+}: {
+  params: Promise<PageParams> | PageParams;
+}) {
+  try {
+    const resolvedParams = await params;
+    const program = await getProgram(resolvedParams.programid);
 
-  if (!program) {
-    notFound();
-    return; // Add this line to help TypeScript understand
-  }
+    if (!program) {
+      notFound();
+      return null;
+    }
 
-  return (
-    <div className="container mx-auto p-4">
-      <div className="mb-4">
-        <Link
-          href="/admin/programs"
-          className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
-        >
-          <ChevronLeft className="h-4 w-4 mr-1" />
-          Back to Programs
-        </Link>
+    return (
+      <div className="container mx-auto p-4">
+        <div className="mb-4">
+          <Link
+            href="/admin/programs"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back to Programs
+          </Link>
+        </div>
+
+        {/* Program Name at the Top */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">{program.name}</CardTitle>
+          </CardHeader>
+        </Card>
+
+        {/* Display Links with Minimal UI */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Links</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LinksList
+              programId={program.id}
+              links={program.additional_links || []}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Media Manager */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Creatives</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MediaManager mediaFiles={program.media_files} />
+          </CardContent>
+        </Card>
+
+        {/* Assign and Display Affiliates */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Affiliates</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Render the client component */}
+            <ProgramManageClient programId={program.id} />
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Program Name at the Top */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold">{program.name}</CardTitle>
-        </CardHeader>
-      </Card>
-
-      {/* Display Links with Minimal UI */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Links</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <LinksList
-            programId={program.id}
-            links={program.additional_links || []}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Media Manager */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Creatives</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <MediaManager mediaFiles={program.media_files} />
-        </CardContent>
-      </Card>
-
-      {/* Assign and Display Affiliates */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Affiliates</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Render the client component */}
-          <ProgramManageClient programId={program.id} />
-        </CardContent>
-      </Card>
-    </div>
-  );
+    );
+  } catch (error) {
+    console.error("Page render error:", error);
+    throw error; // Let Next.js error boundary handle it
+  }
 }
