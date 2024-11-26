@@ -16,7 +16,7 @@ export const runtime = "edge";
 
 // Update type definitions
 type PageProps = {
-  params: Promise<{ programid: string }> | { programid: string };
+  params: Promise<{ programid: string }>;
 };
 
 interface Program {
