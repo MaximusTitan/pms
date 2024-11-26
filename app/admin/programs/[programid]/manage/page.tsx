@@ -1,16 +1,18 @@
+import React from "react";
 import { createClient } from "@/utils/supabase/server";
 import { notFound, redirect } from "next/navigation";
 import { Metadata } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import MediaManager from "./MediaManager"; // Directly import MediaManager
-import { ChevronLeft } from "lucide-react";
+import MediaManager from "./MediaManager"; // Client Component
+import { ChevronLeft, Trash2, Edit3 } from "lucide-react"; // Import icons
 import Link from "next/link";
-import AffiliateAssignmentForm from "./AffiliateAssignmentForm";
+import AffiliateAssignmentForm from "./AffiliateAssignmentForm"; // Client Component
+import LinksList from "./LinksList"; // Client Component
+import ProgramManageClient from "./ProgramManageClient"; // Import the new client component
 
 interface Program {
   id: string;
   name: string;
-  landing_page_url: string;
   commission_type: string;
   commission_value: number;
   currency: string;
@@ -23,6 +25,11 @@ interface Program {
   created_at: string;
   updated_at: string;
   user_id: string;
+  additional_links?: {
+    title: string;
+    url: string;
+    description?: string;
+  }[];
 }
 
 interface Affiliate {
@@ -39,8 +46,8 @@ interface AssignedAffiliate {
 }
 
 type PageProps = {
-  params: Promise<{ programid: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  params: { programid: string };
+  searchParams: { [key: string]: string | string[] | undefined };
 };
 
 // Metadata generation function
@@ -48,8 +55,8 @@ export async function generateMetadata({
   params,
   searchParams,
 }: PageProps): Promise<Metadata> {
-  const resolvedParams = await params;
-  const program = await getProgram(resolvedParams.programid);
+  const awaitedParams = await Promise.resolve(params);
+  const program = await getProgram(awaitedParams.programid);
 
   return {
     title: program ? `Manage ${program.name}` : "Program Not Found",
@@ -126,43 +133,14 @@ export default async function ProgramManagePage({
   params,
   searchParams,
 }: PageProps) {
-  const resolvedParams = await params;
-  const programId = resolvedParams.programid;
-
-  const supabase = await createClient();
-  const program = await getProgram(programId);
-
-  // Fetch all affiliates
-  const { data: allAffiliates, error: affiliatesError } = await supabase
-    .from("affiliates")
-    .select<"id,full_name,work_email", Affiliate>("id,full_name,work_email");
-
-  if (affiliatesError) {
-    console.error("Error fetching affiliates:", affiliatesError);
-    return null;
-  }
-
-  // Fetch already assigned affiliates for the program
-  const { data: assignedAffiliates, error: assignedAffiliatesError } =
-    await supabase
-      .from("affiliate_programs")
-      .select<
-        "affiliate_id,program_id,assigned_at,affiliate:affiliates(id,full_name,work_email)",
-        AssignedAffiliate
-      >("affiliate_id,program_id,assigned_at,affiliate:affiliates(id,full_name,work_email)")
-      .eq("program_id", programId);
-
-  if (assignedAffiliatesError) {
-    console.error(
-      "Error fetching assigned affiliates:",
-      assignedAffiliatesError
-    );
-    return null;
-  }
+  const awaitedParams = await Promise.resolve(params);
+  const program = await getProgram(awaitedParams.programid);
 
   if (!program) {
     notFound();
+    return; // Add this line to help TypeScript understand
   }
+
   return (
     <div className="container mx-auto p-4">
       <div className="mb-4">
@@ -175,70 +153,44 @@ export default async function ProgramManagePage({
         </Link>
       </div>
 
-      <Card>
+      {/* Program Name at the Top */}
+      <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Assign Affiliate to Program</CardTitle>
+          <CardTitle className="text-2xl font-bold">{program.name}</CardTitle>
+        </CardHeader>
+      </Card>
+
+      {/* Display Links with Minimal UI */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Links</CardTitle>
         </CardHeader>
         <CardContent>
-          <AffiliateAssignmentForm
-            programId={programId}
-            affiliates={allAffiliates || []}
+          <LinksList
+            programId={program.id}
+            links={program.additional_links || []}
           />
         </CardContent>
       </Card>
 
-      <Card>
+      {/* Media Manager */}
+      <Card className="mb-6">
         <CardHeader>
-          <CardTitle>{program.name}</CardTitle>
+          <CardTitle>Creatives</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4">
-            <div>
-              <h2 className="font-semibold">Landing Page URL</h2>
-              <p>{program.landing_page_url}</p>
-            </div>
-            <div>
-              <h2 className="font-semibold">Commission Details</h2>
-              <p>
-                {program.commission_value} {program.currency} (
-                {program.commission_type})
-              </p>
-            </div>
-            <div>
-              <h2 className="font-semibold">Recurring Commission</h2>
-              <p>{program.recurring_commission ? "Yes" : "No"}</p>
-            </div>
-            <div>
-              <h2 className="text-2xl font-semibold">Creatives</h2>
-              <MediaManager mediaFiles={program.media_files} />
-            </div>
-          </div>
+          <MediaManager mediaFiles={program.media_files} />
         </CardContent>
       </Card>
 
-      <Card>
+      {/* Assign and Display Affiliates */}
+      <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Assigned Affiliates</CardTitle>
+          <CardTitle>Affiliates</CardTitle>
         </CardHeader>
         <CardContent>
-          {assignedAffiliates && assignedAffiliates.length > 0 ? (
-            <ul className="list-disc list-inside">
-              {assignedAffiliates.map((assignment) => (
-                <li key={assignment.affiliate_id}>
-                  {assignment.affiliate ? (
-                    <span>
-                      {assignment.affiliate.full_name} (
-                      {assignment.affiliate.work_email})
-                    </span>
-                  ) : (
-                    <span>No affiliate details available</span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No affiliates assigned to this program yet.</p>
-          )}
+          {/* Render the client component */}
+          <ProgramManageClient programId={program.id} />
         </CardContent>
       </Card>
     </div>

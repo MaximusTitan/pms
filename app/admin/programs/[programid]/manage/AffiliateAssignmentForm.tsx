@@ -23,10 +23,10 @@ interface AffiliateAssignmentFormProps {
   affiliates: Affiliate[];
 }
 
-export default function AffiliateAssignmentForm({
+const AffiliateAssignmentForm: React.FC<AffiliateAssignmentFormProps> = ({
   programId,
   affiliates,
-}: AffiliateAssignmentFormProps) {
+}) => {
   const [selectedAffiliate, setSelectedAffiliate] = useState<number | null>(
     null
   );
@@ -38,7 +38,7 @@ export default function AffiliateAssignmentForm({
   const handleAffiliateAssignment = async () => {
     setError(null); // Reset error state
     if (selectedAffiliate) {
-      const supabase = createClient();
+      const supabase = await createClient();
       const { error } = await supabase
         .from("affiliate_programs")
         .insert([{ affiliate_id: selectedAffiliate, program_id: programId }]);
@@ -96,4 +96,6 @@ export default function AffiliateAssignmentForm({
       )}
     </div>
   );
-}
+};
+
+export default AffiliateAssignmentForm;

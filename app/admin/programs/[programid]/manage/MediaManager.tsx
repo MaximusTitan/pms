@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState } from "react";
 
 interface MediaFiles {
   images?: string[];
@@ -12,11 +12,22 @@ interface MediaManagerProps {
   mediaFiles: MediaFiles;
 }
 
-export default function MediaManager({ mediaFiles }: MediaManagerProps) {
+const MediaManager: React.FC<MediaManagerProps> = ({ mediaFiles }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
 
+  const handleUpload = () => {
+    // Upload logic here
+    console.log("Upload initiated");
+  };
+
   return (
-    <div className="space-y-8">
+    <div>
+      <button
+        onClick={handleUpload}
+        className="mb-4 p-2 bg-blue-500 text-white rounded"
+      >
+        Upload Media
+      </button>
       {["images", "videos", "pdfs"].map((type) => {
         const mediaArray = mediaFiles[type as keyof MediaFiles] || [];
 
@@ -43,39 +54,29 @@ export default function MediaManager({ mediaFiles }: MediaManagerProps) {
                           />
                         ) : type === "videos" ? (
                           <video
-                            controls
-                            className="w-full h-full object-cover rounded-lg"
+                            src={url}
+                            className="w-full h-full object-cover rounded-lg hover:opacity-90 transition-opacity"
                             onError={(e) =>
                               console.error(`Failed to load video: ${url}`, e)
                             }
-                          >
-                            <source src={url} type="video/mp4" />
-                            Your browser does not support the video tag.
-                          </video>
+                            controls
+                          />
                         ) : (
                           <div className="h-full">
                             <object
                               data={url}
-                              type="application/pdf"
-                              className="w-full h-full"
+                              className="w-full h-full bg-gray-50 flex flex-col items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
                             >
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full h-full bg-gray-50 flex flex-col items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+                              <svg
+                                className="w-12 h-12 text-gray-400 mb-2"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
                               >
-                                <svg
-                                  className="w-12 h-12 text-gray-400 mb-2"
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path d="M4 18h12V6h-4V2H4v16zm0-18h8l6 6v14H2V0h2zm9 0v5h5L13 0z" />
-                                </svg>
-                                <span className="text-sm text-gray-600">
-                                  PDF {index + 1}
-                                </span>
-                              </a>
+                                <path d="M4 18h12V6h-4V2H4v16zm0-18h8l6 6v14H2V0h2zm9 0v5h5L13 0z" />
+                              </svg>
+                              <span className="text-sm text-gray-600">
+                                PDF {index + 1}
+                              </span>
                             </object>
                           </div>
                         )}
@@ -97,4 +98,6 @@ export default function MediaManager({ mediaFiles }: MediaManagerProps) {
       })}
     </div>
   );
-}
+};
+
+export default MediaManager;

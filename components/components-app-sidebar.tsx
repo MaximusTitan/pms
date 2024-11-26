@@ -47,6 +47,7 @@ const adminNavData = [
   { title: "Affiliate", url: "/admin/affiliates", icon: Bot },
   { title: "Programs", url: "/admin/programs", icon: BookOpen },
   { title: "Reports", url: "/admin/reports", icon: Settings2 },
+  { title: "Leads", url: "/leads", icon: Bot },
 ];
 
 const partnerNavData = [

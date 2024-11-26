@@ -65,6 +65,12 @@ export function AffiliateUI() {
   const [sortField, setSortField] = useState<keyof Affiliate | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
+  // Add new state for editing
+  const [isEditing, setIsEditing] = useState(false);
+  const [editAffiliateData, setEditAffiliateData] = useState<Affiliate | null>(
+    null
+  );
+
   useEffect(() => {
     const fetchAffiliates = async () => {
       try {
@@ -139,24 +145,33 @@ export function AffiliateUI() {
     };
   };
 
-  const handleStatusUpdate = async (affiliateId: number, newStatus: string) => {
+  // Modify handleStatusUpdate to a general update function
+  const handleAffiliateUpdate = async (updatedAffiliate: Affiliate) => {
     try {
       const { error } = await supabase
         .from("affiliates")
-        .update({ status: newStatus })
-        .eq("id", affiliateId);
+        .update({
+          full_name: updatedAffiliate.full_name,
+          work_email: updatedAffiliate.work_email,
+          affiliate_id: updatedAffiliate.affiliate_id,
+          status: updatedAffiliate.status,
+          // Include other fields as necessary
+        })
+        .eq("id", updatedAffiliate.id);
 
       if (error) throw error;
 
       setAffiliates((prevAffiliates) =>
         prevAffiliates.map((affiliate) =>
-          affiliate.id === affiliateId
-            ? { ...affiliate, status: newStatus }
-            : affiliate
+          affiliate.id === updatedAffiliate.id ? updatedAffiliate : affiliate
         )
       );
+      setIsEditing(false);
+      setEditAffiliateData(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update status");
+      setError(
+        err instanceof Error ? err.message : "Failed to update affiliate"
+      );
     }
   };
 
@@ -270,7 +285,7 @@ export function AffiliateUI() {
                       <Select
                         value={affiliate.status}
                         onValueChange={(value) =>
-                          handleStatusUpdate(affiliate.id, value)
+                          handleAffiliateUpdate({ ...affiliate, status: value })
                         }
                       >
                         <SelectTrigger className="w-[130px]">
@@ -308,6 +323,18 @@ export function AffiliateUI() {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setIsEditing(true);
+                          setEditAffiliateData(affiliate);
+                        }}
+                      >
+                        Edit
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -539,6 +566,116 @@ export function AffiliateUI() {
                     disabled={isLoading}
                   >
                     {isLoading ? "Adding..." : "Add New Affiliate"}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {isEditing && editAffiliateData && (
+        <div className="fixed inset-0 bg-neutral-400 bg-opacity-50 backdrop-blur-sm flex justify-center items-center">
+          <Card className="w-full max-w-lg bg-neutral-50 border-neutral-400">
+            <CardHeader>
+              <CardTitle>Edit Affiliate</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleAffiliateUpdate(editAffiliateData);
+                }}
+                className="space-y-6"
+              >
+                <div>
+                  <Label htmlFor="edit_status">Status</Label>
+                  <Select
+                    name="status"
+                    value={editAffiliateData.status}
+                    onValueChange={(value) =>
+                      setEditAffiliateData({
+                        ...editAffiliateData,
+                        status: value,
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="enabled">Enabled</SelectItem>
+                      <SelectItem value="disabled">Disabled</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="edit_full_name">Full Name</Label>
+                  <Input
+                    id="edit_full_name"
+                    name="full_name"
+                    value={editAffiliateData.full_name}
+                    onChange={(e) =>
+                      setEditAffiliateData({
+                        ...editAffiliateData,
+                        full_name: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_work_email">Work Email</Label>
+                  <Input
+                    id="edit_work_email"
+                    name="work_email"
+                    type="email"
+                    value={editAffiliateData.work_email}
+                    onChange={(e) =>
+                      setEditAffiliateData({
+                        ...editAffiliateData,
+                        work_email: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_affiliate_id">Affiliate ID</Label>
+                  <Input
+                    id="edit_affiliate_id"
+                    name="affiliate_id"
+                    value={editAffiliateData.affiliate_id}
+                    onChange={(e) =>
+                      setEditAffiliateData({
+                        ...editAffiliateData,
+                        affiliate_id: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Be cautious when changing the Affiliate ID.
+                  </p>
+                </div>
+                {/* Add other fields as necessary */}
+                <div className="flex justify-end space-x-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsEditing(false);
+                      setEditAffiliateData(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="bg-rose-500 hover:bg-rose-600 text-white"
+                  >
+                    Update Affiliate
                   </Button>
                 </div>
               </form>
