@@ -14,9 +14,9 @@ import ProgramManageClient from "./ProgramManageClient"; // Import the new clien
 export const dynamic = "force-dynamic";
 export const runtime = "edge";
 
-// Add dynamic segment configuration
-type PageParams = {
-  programid: string;
+// Update type definitions
+type PageProps = {
+  params: Promise<{ programid: string }> | { programid: string };
 };
 
 interface Program {
@@ -54,12 +54,10 @@ interface AssignedAffiliate {
   affiliate: Affiliate;
 }
 
-// Update metadata function to await params
+// Update metadata function
 export async function generateMetadata({
   params,
-}: {
-  params: Promise<PageParams> | PageParams;
-}): Promise<Metadata> {
+}: PageProps): Promise<Metadata> {
   try {
     const resolvedParams = await params;
     const program = await getProgram(resolvedParams.programid);
@@ -141,12 +139,8 @@ async function getProgram(programId: string): Promise<Program | null> {
   }
 }
 
-// Update page component to await params
-export default async function ProgramManagePage({
-  params,
-}: {
-  params: Promise<PageParams> | PageParams;
-}) {
+// Update page component
+export default async function ProgramManagePage({ params }: PageProps) {
   try {
     const resolvedParams = await params;
     const program = await getProgram(resolvedParams.programid);
