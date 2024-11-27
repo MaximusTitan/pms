@@ -40,10 +40,18 @@ export async function POST(request: NextRequest) {
     const contactData = contactResponse.data;
 
     const leadData = {
-      id: contactData.id, // Keep as string
+      id: contactData.id,
       email: contactData.properties.email || null,
       first_name: contactData.properties.firstname || null,
       last_name: contactData.properties.lastname || null,
+      phone: contactData.properties.phone || null,
+      city: contactData.properties.city || null,
+      school_district: contactData.properties.school_district || null,
+      partner_id: contactData.properties.partner_id || null,
+      kid_s_name: contactData.properties.kid_s_name || null,
+      kid_s_grade: contactData.properties.kid_s_grade || null,
+      lead_source: contactData.properties.lead_source || null,
+      hs_lead_status: contactData.properties.hs_lead_status || null,
       create_date: new Date(contactData.createdAt).toISOString(),
       last_modified_date: new Date(contactData.updatedAt).toISOString(),
       raw_data: contactData
