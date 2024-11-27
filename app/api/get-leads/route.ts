@@ -36,42 +36,29 @@ export async function POST(request: NextRequest) {
     console.log('Fetching contact data from HubSpot...');
     const contactResponse = await hubspotClient.get(`/crm/v3/objects/${objectTypeId}/${objectId}`, {
       params: {
-        properties: [
-          'email',
-          'firstname', 
-          'lastname', 
-          'phone', 
-          'city', 
-          'school_district', 
-          'partner_id', 
-          'kid_s_name', 
-          'kid_s_grade', 
-          'lead_source', 
-          'hs_lead_status',
-          'createdate',
-          'lastmodifieddate'
-        ]
+        properties: 'email,firstname,lastname,phone,city,school_district,partner_id,kid_s_name,kid_s_grade,lead_source,hs_lead_status,createdate,lastmodifieddate'
       }
     });    
     console.log('HubSpot response:', JSON.stringify(contactResponse.data));
     
     const contactData = contactResponse.data;
+    const properties = contactData.properties;
 
     const leadData = {
       id: contactData.id,
-      email: contactData.properties.email || null,
-      first_name: contactData.properties.firstname || null,
-      last_name: contactData.properties.lastname || null,
-      phone: contactData.properties.phone || null,
-      city: contactData.properties.city || null,
-      school_district: contactData.properties.school_district || null,
-      partner_id: contactData.properties.partner_id || null,
-      kid_s_name: contactData.properties.kid_s_name || null,
-      kid_s_grade: contactData.properties.kid_s_grade || null,
-      lead_source: contactData.properties.lead_source || null,
-      hs_lead_status: contactData.properties.hs_lead_status || null,
-      create_date: new Date(contactData.createdAt).toISOString(),
-      last_modified_date: new Date(contactData.updatedAt).toISOString(),
+      email: properties.email || null,
+      first_name: properties.firstname || null,
+      last_name: properties.lastname || null,
+      phone: properties.phone || null,
+      city: properties.city || null,
+      school_district: properties.school_district || null,
+      partner_id: properties.partner_id || null,
+      kid_s_name: properties.kid_s_name || null,
+      kid_s_grade: properties.kid_s_grade || null,
+      lead_source: properties.lead_source || null,
+      hs_lead_status: properties.hs_lead_status || null,
+      create_date: properties.createdate ? new Date(properties.createdate).toISOString() : null,
+      last_modified_date: properties.lastmodifieddate ? new Date(properties.lastmodifieddate).toISOString() : null,
       raw_data: contactData
     };
     console.log('Prepared lead data:', JSON.stringify(leadData));
