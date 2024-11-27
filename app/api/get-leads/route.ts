@@ -34,7 +34,25 @@ export async function POST(request: NextRequest) {
     console.log(`Processing webhook for ${objectTypeId} ${objectId} at ${occurredAt}`);
 
     console.log('Fetching contact data from HubSpot...');
-    const contactResponse = await hubspotClient.get(`/crm/v3/objects/${objectTypeId}/${objectId}`);
+    const contactResponse = await hubspotClient.get(`/crm/v3/objects/${objectTypeId}/${objectId}`, {
+      params: {
+        properties: [
+          'email',
+          'firstname', 
+          'lastname', 
+          'phone', 
+          'city', 
+          'school_district', 
+          'partner_id', 
+          'kid_s_name', 
+          'kid_s_grade', 
+          'lead_source', 
+          'hs_lead_status',
+          'createdate',
+          'lastmodifieddate'
+        ]
+      }
+    });    
     console.log('HubSpot response:', JSON.stringify(contactResponse.data));
     
     const contactData = contactResponse.data;
