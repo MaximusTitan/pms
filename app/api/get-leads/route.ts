@@ -22,7 +22,8 @@ export async function POST(request: NextRequest) {
   
   try {
     const payload = await request.json();
-    console.log('Webhook payload:', JSON.stringify(payload, null, 2));
+    
+    console.log('Webhook payload:', JSON.stringify(payload));
     
     if (!payload || !payload.length) {
       console.warn('Invalid payload received');
@@ -34,12 +35,12 @@ export async function POST(request: NextRequest) {
 
     console.log('Fetching contact data from HubSpot...');
     const contactResponse = await hubspotClient.get(`/crm/v3/objects/${objectTypeId}/${objectId}`);
-    console.log('HubSpot response:', JSON.stringify(contactResponse.data, null, 2));
+    console.log('HubSpot response:', JSON.stringify(contactResponse.data));
     
     const contactData = contactResponse.data;
 
     const leadData = {
-      id: BigInt(contactData.id),
+      id: contactData.id, // Keep as string
       email: contactData.properties.email || null,
       first_name: contactData.properties.firstname || null,
       last_name: contactData.properties.lastname || null,
@@ -47,12 +48,12 @@ export async function POST(request: NextRequest) {
       last_modified_date: new Date(contactData.updatedAt).toISOString(),
       raw_data: contactData
     };
-    console.log('Prepared lead data:', JSON.stringify({ ...leadData, id: leadData.id.toString() }, null, 2));
+    console.log('Prepared lead data:', JSON.stringify(leadData));
 
     console.log('Upserting lead data to Supabase...');
-    const { error } = await supabase.from('leads').upsert(leadData, {
+    const { data, error } = await supabase.from('leads').upsert(leadData, {
       onConflict: 'id'
-    });
+    }).select();
 
     if (error) {
       console.error('Supabase upsert error:', error);
