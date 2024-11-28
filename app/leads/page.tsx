@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -18,17 +20,26 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/client";
+import { ChevronUp, ChevronDown, MoreHorizontal } from "lucide-react";
 
 interface Lead {
   id: number;
   email: string | null;
   first_name: string | null;
   last_name: string | null;
-  create_date: string | null;
   last_modified_date: string | null;
   raw_data: any;
-  created_at: string | null;
+  create_date: string | null;
   phone: string | null;
   city: string | null;
   school_district: string | null;
@@ -37,7 +48,26 @@ interface Lead {
   kid_s_grade: string | null;
   lead_source: string | null;
   hs_lead_status: string | null;
+  orientation_schedule: string | null;
+  demo_time: string | null;
 }
+
+// Define all possible columns
+const ALL_COLUMNS: (keyof Lead)[] = [
+  "create_date",
+  "first_name",
+  "last_name",
+  "phone",
+  "email",
+  "city",
+  "school_district",
+  "kid_s_name",
+  "kid_s_grade",
+  "lead_source",
+  "partner_id",
+  "hs_lead_status",
+  "orientation_schedule",
+];
 
 const client = createClient();
 
@@ -46,25 +76,30 @@ const LeadsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState<string>("");
-  const [sortField, setSortField] = useState<keyof Lead>("created_at");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [sortField, setSortField] = useState<keyof Lead>("create_date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [selectedColumns, setSelectedColumns] = useState<(keyof Lead)[]>([
+    "create_date",
+    "first_name",
+    "phone",
+    "email",
+    "city",
+    "kid_s_name",
+  ]);
   const itemsPerPage = 10;
 
   useEffect(() => {
     const fetchLeads = async () => {
       try {
-        const { data, error } = (await client
-          .from<"leads", Lead>("leads")
+        setLoading(true);
+        const { data, error } = await client
+          .from("leads")
           .select("*")
-          .order(sortField, { ascending: sortOrder === "asc" })) as {
-          data: Lead[] | null;
-          error: any;
-        };
+          .order(sortField, { ascending: sortOrder === "asc" });
 
-        if (data) {
-          setLeads(data as Lead[]);
-        }
+        if (error) throw error;
+        if (data) setLeads(data as Lead[]);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -75,6 +110,15 @@ const LeadsPage: React.FC = () => {
     fetchLeads();
   }, [sortField, sortOrder]);
 
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return { date: "", time: "" };
+    const date = new Date(dateString);
+    return {
+      date: date.toLocaleDateString(),
+      time: date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+  };
+
   const filteredLeads = leads.filter(
     (lead) =>
       (lead.first_name &&
@@ -84,6 +128,7 @@ const LeadsPage: React.FC = () => {
       (lead.email && lead.email.toLowerCase().includes(search.toLowerCase()))
   );
 
+  const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
   const paginatedLeads = filteredLeads.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -95,80 +140,166 @@ const LeadsPage: React.FC = () => {
     setSortOrder(order);
   };
 
-  if (loading) return <p>Loading leads...</p>;
-  if (error) return <p>Error: {error}</p>;
+  const renderSortIcon = (field: keyof Lead) => {
+    if (sortField !== field) return null;
+    return sortOrder === "asc" ? (
+      <ChevronUp className="inline-block w-4 h-4 ml-1" />
+    ) : (
+      <ChevronDown className="inline-block w-4 h-4 ml-1" />
+    );
+  };
+
+  const generatePageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      pageNumbers.push(1);
+      const leftSide = Math.max(2, currentPage - 1);
+      const rightSide = Math.min(totalPages - 1, currentPage + 1);
+
+      if (leftSide > 2) pageNumbers.push(-1);
+
+      for (let i = leftSide; i <= rightSide; i++) {
+        pageNumbers.push(i);
+      }
+
+      if (rightSide < totalPages - 1) pageNumbers.push(-1);
+      pageNumbers.push(totalPages);
+    }
+
+    return pageNumbers;
+  };
+
+  const handleColumnToggle = (column: keyof Lead) => {
+    setSelectedColumns((prev) =>
+      prev.includes(column)
+        ? prev.filter((col) => col !== column)
+        : [...prev, column]
+    );
+  };
+
+  if (loading) return <p className="p-4 text-center">Loading leads...</p>;
+  if (error)
+    return <p className="p-4 text-center text-red-500">Error: {error}</p>;
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">Supabase Leads</h1>
-        <div className="flex items-center py-4">
+    <div className="container mx-auto px-4 py-6 space-y-4">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <h1 className="text-2xl font-bold tracking-tight">Leads</h1>
+        <div className="flex items-center space-x-4">
           <Input
             placeholder="Search leads..."
             value={search}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               setSearch(e.target.value)
             }
-            className="max-w-sm"
+            className="w-full md:max-w-sm"
           />
-        </div>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead onClick={() => handleSort("first_name")}>
-                  First Name
-                </TableHead>
-                <TableHead onClick={() => handleSort("last_name")}>
-                  Last Name
-                </TableHead>
-                <TableHead onClick={() => handleSort("email")}>Email</TableHead>
-                <TableHead onClick={() => handleSort("created_at")}>
-                  Created At
-                </TableHead>
-                <TableHead onClick={() => handleSort("phone")}>Phone</TableHead>
-                <TableHead onClick={() => handleSort("city")}>City</TableHead>
-                <TableHead onClick={() => handleSort("school_district")}>
-                  School District
-                </TableHead>
-                <TableHead onClick={() => handleSort("partner_id")}>
-                  Partner ID
-                </TableHead>
-                <TableHead onClick={() => handleSort("kid_s_name")}>
-                  Kid's Name
-                </TableHead>
-                <TableHead onClick={() => handleSort("kid_s_grade")}>
-                  Kid's Grade
-                </TableHead>
-                <TableHead onClick={() => handleSort("lead_source")}>
-                  Lead Source
-                </TableHead>
-                <TableHead onClick={() => handleSort("hs_lead_status")}>
-                  Lead Status
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedLeads.map((lead) => (
-                <TableRow key={lead.id}>
-                  <TableCell>{lead.first_name}</TableCell>
-                  <TableCell>{lead.last_name}</TableCell>
-                  <TableCell>{lead.email}</TableCell>
-                  <TableCell>{lead.created_at}</TableCell>
-                  <TableCell>{lead.phone}</TableCell>
-                  <TableCell>{lead.city}</TableCell>
-                  <TableCell>{lead.school_district}</TableCell>
-                  <TableCell>{lead.partner_id}</TableCell>
-                  <TableCell>{lead.kid_s_name}</TableCell>
-                  <TableCell>{lead.kid_s_grade}</TableCell>
-                  <TableCell>{lead.lead_source}</TableCell>
-                  <TableCell>{lead.hs_lead_status}</TableCell>
-                </TableRow>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Columns <MoreHorizontal className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56">
+              <DropdownMenuLabel>Select Columns</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {ALL_COLUMNS.map((column) => (
+                <DropdownMenuItem
+                  key={column}
+                  onSelect={(e) => e.preventDefault()}
+                >
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={column}
+                      checked={selectedColumns.includes(column)}
+                      onCheckedChange={() => handleColumnToggle(column)}
+                    />
+                    <Label htmlFor={column} className="capitalize">
+                      {column.replace(/_/g, " ")}
+                    </Label>
+                  </div>
+                </DropdownMenuItem>
               ))}
-            </TableBody>
-          </Table>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-        <Pagination className="mt-4">
+      </div>
+
+      <div className="overflow-x-auto rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {selectedColumns.map((field) => (
+                <TableHead
+                  key={field}
+                  onClick={() => handleSort(field)}
+                  className="cursor-pointer hover:bg-gray-100 transition-colors"
+                >
+                  {field === "create_date"
+                    ? "Date"
+                    : field === "first_name"
+                      ? "Name"
+                      : field === "kid_s_name"
+                        ? "Kid's Name"
+                        : field === "kid_s_grade"
+                          ? "Kid's Grade"
+                          : field === "school_district"
+                            ? "School Dist"
+                            : field === "lead_source"
+                              ? "Lead Source"
+                              : field === "partner_id"
+                                ? "Lead Source Drilldown"
+                                : field === "hs_lead_status"
+                                  ? "Lead Status"
+                                  : field === "orientation_schedule"
+                                    ? "Notes"
+                                    : field
+                                        .replace(/_/g, " ")
+                                        .replace(/\b\w/g, (l) =>
+                                          l.toUpperCase()
+                                        )}
+                  {renderSortIcon(field)}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedLeads.map((lead) => (
+              <TableRow key={lead.id}>
+                {selectedColumns.map((field) => (
+                  <TableCell key={field}>
+                    {field === "create_date" ? (
+                      <>
+                        <div>{formatDate(lead[field]).date}</div>
+                        <div className="text-xs text-gray-500">
+                          {formatDate(lead[field]).time}
+                        </div>
+                      </>
+                    ) : field === "first_name" ? (
+                      `${lead.first_name || ""} ${lead.last_name || ""}`.trim()
+                    ) : (
+                      lead[field] || ""
+                    )}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {filteredLeads.length === 0 && (
+        <p className="text-center text-gray-500 py-4">No leads found</p>
+      )}
+
+      {totalPages > 1 && (
+        <Pagination className="mt-4 flex justify-center">
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
@@ -177,20 +308,27 @@ const LeadsPage: React.FC = () => {
                   e.preventDefault();
                   if (currentPage > 1) setCurrentPage(currentPage - 1);
                 }}
+                className={
+                  currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                }
               />
             </PaginationItem>
-            {[...Array(Math.ceil(filteredLeads.length / itemsPerPage))].map(
-              (_, i) => (
-                <PaginationItem key={i + 1}>
+            {generatePageNumbers().map((pageNum) =>
+              pageNum === -1 ? (
+                <PaginationItem key={`ellipsis-${Math.random()}`}>
+                  <span className="px-2">...</span>
+                </PaginationItem>
+              ) : (
+                <PaginationItem key={pageNum}>
                   <PaginationLink
                     href="#"
-                    isActive={currentPage === i + 1}
+                    isActive={currentPage === pageNum}
                     onClick={(e) => {
                       e.preventDefault();
-                      setCurrentPage(i + 1);
+                      setCurrentPage(pageNum);
                     }}
                   >
-                    {i + 1}
+                    {pageNum}
                   </PaginationLink>
                 </PaginationItem>
               )
@@ -200,16 +338,18 @@ const LeadsPage: React.FC = () => {
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
-                  if (
-                    currentPage < Math.ceil(filteredLeads.length / itemsPerPage)
-                  )
-                    setCurrentPage(currentPage + 1);
+                  if (currentPage < totalPages) setCurrentPage(currentPage + 1);
                 }}
+                className={
+                  currentPage === totalPages
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                }
               />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
-      </div>
+      )}
     </div>
   );
 };

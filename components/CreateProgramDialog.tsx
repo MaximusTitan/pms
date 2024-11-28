@@ -36,16 +36,24 @@ export function CreateProgramDialog({
     formData,
     setFormData,
     fileInputs,
+    setFileInputs,
     currentStep,
     errors,
     loading,
     handleFileChange,
-    handleCreateProgram,
+    handleCreateProgram: originalHandleCreateProgram,
     handleNextStep,
     handlePreviousStep,
   } = useCreateProgram(onSuccess);
 
+  const handleCreateProgram = async () => {
+    console.log("CreateProgramDialog: handleCreateProgram triggered.");
+    await originalHandleCreateProgram();
+    // No need to reset form here as it's handled in the hook
+  };
+
   const renderStep = () => {
+    console.log("CreateProgramDialog: Rendering step", currentStep);
     switch (currentStep) {
       case 1:
         return (
@@ -66,19 +74,25 @@ export function CreateProgramDialog({
               )}
             </div>
             <div>
-              <Label className={cn(errors.landing_page_url && "text-red-500")}>
-                Landing Page URL *
+              <Label className={cn(errors.additional_links && "text-red-500")}>
+                Additional Links
               </Label>
               <Input
-                value={formData.landing_page_url}
+                value={formData.additional_links.join(", ")} // Ensure formData.additional_links is defined
                 onChange={(e) =>
-                  setFormData({ ...formData, landing_page_url: e.target.value })
+                  setFormData({
+                    ...formData,
+                    additional_links: e.target.value
+                      .split(",")
+                      .map((link) => link.trim()),
+                  })
                 }
-                className={cn(errors.landing_page_url && "border-red-500")}
+                placeholder="Enter links separated by commas"
+                className={cn(errors.additional_links && "border-red-500")}
               />
-              {errors.landing_page_url && (
+              {errors.additional_links && (
                 <p className="text-sm text-red-500 mt-1">
-                  {errors.landing_page_url}
+                  {errors.additional_links}
                 </p>
               )}
             </div>
@@ -255,7 +269,16 @@ export function CreateProgramDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={(openState) => {
+        console.log(
+          "CreateProgramDialog: Dialog open state changed to:",
+          openState
+        );
+        onOpenChange(openState);
+      }}
+    >
       <DialogContent className="sm:max-w-[425px] dark:bg-neutral-950">
         <DialogHeader>
           <DialogTitle>Create New Program</DialogTitle>
@@ -267,7 +290,10 @@ export function CreateProgramDialog({
           {currentStep > 1 && (
             <Button
               variant="outline"
-              onClick={handlePreviousStep}
+              onClick={() => {
+                console.log("CreateProgramDialog: Previous button clicked.");
+                handlePreviousStep();
+              }}
               disabled={loading}
             >
               Previous
@@ -275,7 +301,12 @@ export function CreateProgramDialog({
           )}
           <Button
             className="bg-rose-500 hover:bg-rose-600 text-white ml-auto"
-            onClick={currentStep < 3 ? handleNextStep : handleCreateProgram}
+            onClick={() => {
+              console.log(
+                `CreateProgramDialog: Next/Create button clicked on step ${currentStep}.`
+              );
+              currentStep < 3 ? handleNextStep() : handleCreateProgram();
+            }}
             disabled={loading}
           >
             {currentStep < 3 ? (

@@ -10,7 +10,7 @@ export interface Program {
   id: string;
   user_id: string | null;
   name: string;
-  landing_page_url: string;
+  additional_links: string[]; // Ensured as required
   commission_type: string;
   commission_value: number;
   currency: string;
@@ -28,15 +28,15 @@ export interface FileInputState {
 
 export const programFormSchema = z.object({
   name: z.string().min(1, "Program name is required"),
-  landing_page_url: z.string().url("Please enter a valid URL"),
+  additional_links: z.array(z.string().url("Invalid URL")), // Removed .optional()
   commission_type: z.enum(["fixed", "percentage"]),
   commission_value: z.number().min(0.01, "Commission value must be greater than 0"),
   currency: z.string().min(1, "Currency is required"),
   recurring_commission: z.boolean(),
   media_files: z.object({
-    images: z.array(z.string()),
-    videos: z.array(z.string()),
-    pdfs: z.array(z.string()),
+    images: z.array(z.string().url()),
+    videos: z.array(z.string().url()),
+    pdfs: z.array(z.string().url()),
   }),
 });
 

@@ -18,17 +18,22 @@ export default function ProgramsPage() {
 
   // Add a helper function to fetch public URLs in parallel
   const fetchPublicUrls = async (filePaths: string[]) => {
+    console.log("Fetching public URLs for file paths:", filePaths);
     const promises = filePaths.map((filePath) => {
-      const { data: publicData } = supabase.storage
+      const publicData = supabase.storage
         .from("program-media")
-        .getPublicUrl(filePath);
+        .getPublicUrl(filePath).data;
+      // Removed error handling as 'error' does not exist
       return publicData?.publicUrl || filePath;
     });
-    return Promise.all(promises);
+    const results = await Promise.all(promises);
+    console.log("Fetched public URLs:", results);
+    return results;
   };
 
   useEffect(() => {
     async function fetchPrograms() {
+      console.log("fetchPrograms called.");
       try {
         const {
           data: { user },
@@ -54,6 +59,8 @@ export default function ProgramsPage() {
           return;
         }
 
+        console.log("User authenticated:", user);
+
         // Fetch programs without specifying relationships
         const { data: programsData, error: programsError } = await supabase
           .from("programs")
@@ -71,6 +78,8 @@ export default function ProgramsPage() {
           setPrograms([]);
           return;
         }
+
+        console.log("Programs fetched from database:", programsData);
 
         interface MediaFile {
           images: string[];
@@ -91,21 +100,30 @@ export default function ProgramsPage() {
         }
 
         const programsWithUrls: ProgramWithUrls[] = await Promise.all(
-          programsData.map(async (program: ProgramData) => ({
-            ...program,
-            media_files: {
-              images: await fetchPublicUrls(program.media_files?.images || []),
-              videos: await fetchPublicUrls(program.media_files?.videos || []),
-              pdfs: await fetchPublicUrls(program.media_files?.pdfs || []),
-            },
-          }))
+          programsData.map(async (program: ProgramData) => {
+            console.log("Processing program:", program.id);
+            return {
+              ...program,
+              additional_links: program.additional_links, // Ensure this field is included
+              media_files: {
+                images: await fetchPublicUrls(
+                  program.media_files?.images || []
+                ),
+                videos: await fetchPublicUrls(
+                  program.media_files?.videos || []
+                ),
+                pdfs: await fetchPublicUrls(program.media_files?.pdfs || []),
+              },
+            };
+          })
         );
 
+        console.log("Programs with public URLs:", programsWithUrls);
         setPrograms(programsWithUrls);
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error occurred";
-        console.error("Error fetching programs:", errorMessage);
+        console.error("Error fetching programs:", error);
 
         toast({
           title: "Error",
@@ -114,6 +132,7 @@ export default function ProgramsPage() {
         });
       } finally {
         setLoading(false);
+        console.log("fetchPrograms completed. Loading state:", loading);
       }
     }
 
@@ -121,8 +140,10 @@ export default function ProgramsPage() {
   }, [supabase, toast]);
 
   const handleProgramCreated = async (program: Program) => {
+    console.log("handleProgramCreated called with program:", program);
     try {
       // Fetch the newly created program data without specifying relationships
+      console.log(`Fetching created program with ID: ${program.id}`);
       const { data, error } = await supabase
         .from("programs")
         .select("*")
@@ -135,8 +156,11 @@ export default function ProgramsPage() {
       }
 
       if (!data) {
+        console.warn("No program data returned for ID:", program.id);
         throw new Error("No program data returned");
       }
+
+      console.log("Fetched created program data:", data);
 
       const programWithUrls = {
         ...data,
@@ -147,6 +171,7 @@ export default function ProgramsPage() {
         },
       };
 
+      console.log("Program with public URLs:", programWithUrls);
       setPrograms((prevPrograms) => [programWithUrls, ...prevPrograms]);
       setIsCreating(false);
 
@@ -173,19 +198,21 @@ export default function ProgramsPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex justify-center items-center min-h-screen bg-white dark:bg-neutral-900">
+        <Loader2 className="h-8 w-8 animate-spin text-neutral-800 dark:text-neutral-200" />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="container mx-auto py-8 bg-white dark:bg-neutral-900">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Affiliate Programs</h1>
+        <h1 className="text-3xl font-bold text-neutral-900 dark:text-white">
+          Affiliate Programs
+        </h1>
         <Button
           onClick={() => setIsCreating(true)}
-          className="bg-rose-500 hover:bg-rose-600 text-white"
+          className="bg-rose-500 hover:bg-rose-600 text-white dark:bg-rose-400 dark:hover:bg-rose-500"
         >
           Create New Program
         </Button>
@@ -193,7 +220,7 @@ export default function ProgramsPage() {
 
       {programs.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500">
+          <p className="text-neutral-500 dark:text-neutral-400">
             No programs created yet. Create your first program!
           </p>
         </div>
@@ -208,7 +235,10 @@ export default function ProgramsPage() {
 
       <CreateProgramDialog
         open={isCreating}
-        onOpenChange={setIsCreating}
+        onOpenChange={(open) => {
+          console.log("CreateProgramDialog open state changed to:", open);
+          setIsCreating(open);
+        }}
         onSuccess={handleProgramCreated}
       />
     </div>

@@ -13,7 +13,7 @@ export function useCreateProgram(onSuccess: (program: Program) => void) {
 
   const [formData, setFormData] = useState<ProgramFormData>({
     name: "",
-    landing_page_url: "",
+    additional_links: [], // Ensured as initialized
     commission_type: "fixed",
     commission_value: 0,
     currency: "USD",
@@ -38,7 +38,7 @@ export function useCreateProgram(onSuccess: (program: Program) => void) {
         case 1:
           programFormSchema.pick({
             name: true,
-            landing_page_url: true,
+            additional_links: true,
           }).parse(formData);
           break;
         case 2:
@@ -84,23 +84,33 @@ export function useCreateProgram(onSuccess: (program: Program) => void) {
     type: "images" | "videos" | "pdfs"
   ) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    console.log(`handleFileChange called for type: ${type}, file:`, file);
+    if (!file) {
+      console.log("No file selected.");
+      return;
+    }
 
     try {
       setLoading(true);
       const fileExt = file.name.split(".").pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
       const filePath = `${type}/${fileName}`;
+      console.log(`Uploading file to path: ${filePath}`);
 
       const { error: uploadError } = await supabase.storage
         .from("program-media")
         .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from("program-media")
         .getPublicUrl(filePath);
+      
+      console.log("File uploaded successfully. Public URL:", publicUrl);
 
       setFormData((prev) => ({
         ...prev,
@@ -113,6 +123,7 @@ export function useCreateProgram(onSuccess: (program: Program) => void) {
       setFileInputs((prev) => ({ ...prev, [type]: "" }));
       toast({ title: "Success", description: "File uploaded successfully" });
     } catch (error) {
+      console.error("Error in handleFileChange:", error);
       toast({
         title: "Error",
         description: "Failed to upload file",
@@ -124,31 +135,73 @@ export function useCreateProgram(onSuccess: (program: Program) => void) {
   };
 
   const handleCreateProgram = async () => {
+    console.log("handleCreateProgram called.");
     if (!validateStep(currentStep)) {
+      console.log("Validation failed for step:", currentStep);
       return;
     }
 
     setLoading(true);
     try {
+      console.log("Fetching authenticated user...");
       const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error("User not authenticated");
+      console.log("User data:", user);
+      if (userError || !user) {
+        console.error("User authentication error:", userError);
+        throw new Error("User not authenticated");
+      }
 
+      console.log("Validating form data...");
       const validatedData = programFormSchema.parse(formData);
+      // Now additional_links is guaranteed to be defined
+      console.log("Validated data:", validatedData);
+
+      console.log("Inserting program into database...");
       const { data, error } = await supabase
         .from("programs")
         .insert([{
           ...validatedData,
           user_id: user.id,
+          media_files: validatedData.media_files, 
         }])
         .select();
 
-      if (error) throw error;
-      onSuccess(data[0]);
-      toast({
-        title: "Success",
-        description: "Program created successfully",
-      });
+      console.log("Insert response data:", data);
+      if (error) {
+        console.error("Insert error:", error);
+        throw error;
+      }
+      if (data && data[0]) {
+        console.log("Program created successfully:", data[0]);
+        onSuccess(data[0]);
+        toast({
+          title: "Success",
+          description: "Program created successfully",
+        });
+        // Reset form data after successful creation
+        setFormData({
+          name: "",
+          additional_links: [],
+          commission_type: "fixed",
+          commission_value: 0,
+          currency: "USD",
+          recurring_commission: false,
+          media_files: {
+            images: [],
+            videos: [],
+            pdfs: [],
+          },
+        });
+        setFileInputs({
+          images: "",
+          videos: "",
+          pdfs: "",
+        });
+        setCurrentStep(1);
+        console.log("Form data and file inputs reset.");
+      }
     } catch (error) {
+      console.error("Error in handleCreateProgram:", error);
       if (error instanceof ZodError) {
         const newErrors: Record<string, string> = {};
         error.errors.forEach((err) => {
@@ -160,11 +213,12 @@ export function useCreateProgram(onSuccess: (program: Program) => void) {
       }
       toast({
         title: "Error",
-        description: "Failed to create program",
+        description: error instanceof Error ? error.message : "Failed to create program",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+      console.log("handleCreateProgram finished. Loading state:", loading);
     }
   };
 
@@ -172,6 +226,7 @@ export function useCreateProgram(onSuccess: (program: Program) => void) {
     formData,
     setFormData,
     fileInputs,
+    setFileInputs, 
     currentStep,
     errors,
     loading,
