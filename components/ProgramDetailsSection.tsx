@@ -83,7 +83,10 @@ export const ProgramDetailsSection: React.FC<ProgramDetailsSectionProps> = ({
             <CardTitle>Program Creatives</CardTitle>
           </CardHeader>
           <CardContent>
-            <MediaManager mediaFiles={program.media_files} />
+            <MediaManager
+              mediaFiles={program.media_files}
+              programId={program.id}
+            />
           </CardContent>
         </Card>
       </div>
