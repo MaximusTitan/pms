@@ -22,10 +22,6 @@ type PageProps = {
 interface Program {
   id: string;
   name: string;
-  commission_type: string;
-  commission_value: number;
-  currency: string;
-  recurring_commission: boolean;
   media_files: {
     images?: string[];
     videos?: string[];
@@ -188,7 +184,10 @@ export default async function ProgramManagePage({ params }: PageProps) {
             <CardTitle>Creatives</CardTitle>
           </CardHeader>
           <CardContent>
-            <MediaManager mediaFiles={program.media_files} />
+            <MediaManager
+              mediaFiles={program.media_files}
+              programId={program.id}
+            />
           </CardContent>
         </Card>
 

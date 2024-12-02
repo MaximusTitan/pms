@@ -52,6 +52,27 @@ export function CreateProgramDialog({
     // No need to reset form here as it's handled in the hook
   };
 
+  const handleAddLink = () => {
+    setFormData({
+      ...formData,
+      additional_links: [
+        ...formData.additional_links,
+        { title: "", url: "", description: "" },
+      ],
+    });
+  };
+
+  const handleRemoveLink = (index: number) => {
+    if (index === 0) {
+      // Prevent removing the first link
+      return;
+    }
+    const newLinks = formData.additional_links.filter((_, i) => i !== index);
+    setFormData({ ...formData, additional_links: newLinks });
+  };
+
+  const totalSteps = 3; // Update the total number of steps
+
   const renderStep = () => {
     console.log("CreateProgramDialog: Rendering step", currentStep);
     switch (currentStep) {
@@ -74,26 +95,19 @@ export function CreateProgramDialog({
               )}
             </div>
             <div>
-              <Label className={cn(errors.additional_links && "text-red-500")}>
-                Additional Links
+              <Label className={cn(errors.overview && "text-red-500")}>
+                Program Overview
               </Label>
               <Input
-                value={formData.additional_links.join(", ")} // Ensure formData.additional_links is defined
+                value={formData.overview}
                 onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    additional_links: e.target.value
-                      .split(",")
-                      .map((link) => link.trim()),
-                  })
+                  setFormData({ ...formData, overview: e.target.value })
                 }
-                placeholder="Enter links separated by commas"
-                className={cn(errors.additional_links && "border-red-500")}
+                placeholder="Enter a brief overview of the program"
+                className={cn(errors.overview && "border-red-500")}
               />
-              {errors.additional_links && (
-                <p className="text-sm text-red-500 mt-1">
-                  {errors.additional_links}
-                </p>
+              {errors.overview && (
+                <p className="text-sm text-red-500 mt-1">{errors.overview}</p>
               )}
             </div>
           </div>
@@ -101,100 +115,122 @@ export function CreateProgramDialog({
 
       case 2:
         return (
-          <div className="space-y-4">
-            <div>
-              <Label className={cn(errors.commission_type && "text-red-500")}>
-                Commission Type *
-              </Label>
-              <Select
-                onValueChange={(value: "fixed" | "percentage") =>
-                  setFormData({ ...formData, commission_type: value })
-                }
-                value={formData.commission_type}
-              >
-                <SelectTrigger
-                  className={cn(errors.commission_type && "border-red-500")}
-                >
-                  <SelectValue placeholder="Select commission type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fixed">Fixed Commission</SelectItem>
-                  <SelectItem value="percentage">
-                    Percentage per Transaction
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.commission_type && (
-                <p className="text-sm text-red-500 mt-1">
-                  {errors.commission_type}
-                </p>
-              )}
-            </div>
+          <div className="space-y-6">
+            <Label className="text-lg font-medium">Additional Links</Label>
 
-            <div>
-              <Label className={cn(errors.commission_value && "text-red-500")}>
-                Commission Value *
-              </Label>
+            {/* First Link (Mandatory) */}
+            <div className="space-y-2 border p-4 rounded">
+              <h3 className="font-semibold">Link 1 (Required)</h3>
               <Input
-                type="number"
-                value={formData.commission_value}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    commission_value: parseFloat(e.target.value) || 0,
-                  })
-                }
-                className={cn(errors.commission_value && "border-red-500")}
+                placeholder="Title"
+                value={formData.additional_links[0]?.title || ""}
+                onChange={(e) => {
+                  const newLinks = [...formData.additional_links];
+                  newLinks[0] = { ...newLinks[0], title: e.target.value };
+                  setFormData({ ...formData, additional_links: newLinks });
+                }}
+                className={cn(
+                  errors[`additional_links.0.title`] && "border-red-500"
+                )}
               />
-              {errors.commission_value && (
+              {errors[`additional_links.0.title`] && (
                 <p className="text-sm text-red-500 mt-1">
-                  {errors.commission_value}
+                  {errors[`additional_links.0.title`]}
                 </p>
               )}
-            </div>
-
-            <div>
-              <Label className={cn(errors.currency && "text-red-500")}>
-                Currency *
-              </Label>
-              <Select
-                onValueChange={(value) =>
-                  setFormData({ ...formData, currency: value })
-                }
-                value={formData.currency}
-              >
-                <SelectTrigger
-                  className={cn(errors.currency && "border-red-500")}
-                >
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="EUR">EUR</SelectItem>
-                  <SelectItem value="GBP">GBP</SelectItem>
-                  <SelectItem value="INR">INR</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.currency && (
-                <p className="text-sm text-red-500 mt-1">{errors.currency}</p>
-              )}
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="recurring"
-                checked={formData.recurring_commission}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    recurring_commission: e.target.checked,
-                  })
-                }
-                className="h-4 w-4 rounded border-gray-300"
+              <Input
+                placeholder="URL"
+                value={formData.additional_links[0]?.url || ""}
+                onChange={(e) => {
+                  const newLinks = [...formData.additional_links];
+                  newLinks[0] = { ...newLinks[0], url: e.target.value };
+                  setFormData({ ...formData, additional_links: newLinks });
+                }}
+                className={cn(
+                  errors[`additional_links.0.url`] && "border-red-500"
+                )}
               />
-              <Label htmlFor="recurring">Enable Recurring Commission</Label>
+              {errors[`additional_links.0.url`] && (
+                <p className="text-sm text-red-500 mt-1">
+                  {errors[`additional_links.0.url`]}
+                </p>
+              )}
+              <Input
+                placeholder="Description"
+                value={formData.additional_links[0]?.description || ""}
+                onChange={(e) => {
+                  const newLinks = [...formData.additional_links];
+                  newLinks[0] = {
+                    ...newLinks[0],
+                    description: e.target.value,
+                  };
+                  setFormData({ ...formData, additional_links: newLinks });
+                }}
+              />
             </div>
+
+            {/* Additional Optional Links */}
+            {formData.additional_links.slice(1).map((link, index) => (
+              <div key={index + 1} className="space-y-2 border p-4 rounded">
+                <h3 className="font-semibold">Link {index + 2}</h3>
+                <Input
+                  placeholder="Title"
+                  value={link.title}
+                  onChange={(e) => {
+                    const newLinks = [...formData.additional_links];
+                    newLinks[index + 1].title = e.target.value;
+                    setFormData({ ...formData, additional_links: newLinks });
+                  }}
+                  className={cn(
+                    errors[`additional_links.${index + 1}.title`] &&
+                      "border-red-500"
+                  )}
+                />
+                {errors[`additional_links.${index + 1}.title`] && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors[`additional_links.${index + 1}.title`]}
+                  </p>
+                )}
+                <Input
+                  placeholder="URL"
+                  value={link.url}
+                  onChange={(e) => {
+                    const newLinks = [...formData.additional_links];
+                    newLinks[index + 1].url = e.target.value;
+                    setFormData({ ...formData, additional_links: newLinks });
+                  }}
+                  className={cn(
+                    errors[`additional_links.${index + 1}.url`] &&
+                      "border-red-500"
+                  )}
+                />
+                {errors[`additional_links.${index + 1}.url`] && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors[`additional_links.${index + 1}.url`]}
+                  </p>
+                )}
+                <Input
+                  placeholder="Description"
+                  value={link.description || ""}
+                  onChange={(e) => {
+                    const newLinks = [...formData.additional_links];
+                    newLinks[index + 1].description = e.target.value;
+                    setFormData({ ...formData, additional_links: newLinks });
+                  }}
+                />
+                <Button
+                  variant="destructive"
+                  onClick={() => handleRemoveLink(index + 1)}
+                  className="mt-2"
+                >
+                  Remove Link
+                </Button>
+              </div>
+            ))}
+
+            <Button onClick={handleAddLink} className="mt-4">
+              Add Another Link
+            </Button>
           </div>
         );
 
@@ -305,11 +341,13 @@ export function CreateProgramDialog({
               console.log(
                 `CreateProgramDialog: Next/Create button clicked on step ${currentStep}.`
               );
-              currentStep < 3 ? handleNextStep() : handleCreateProgram();
+              currentStep < totalSteps
+                ? handleNextStep()
+                : handleCreateProgram();
             }}
             disabled={loading}
           >
-            {currentStep < 3 ? (
+            {currentStep < totalSteps ? (
               "Next"
             ) : loading ? (
               <Loader2 className="animate-spin" />

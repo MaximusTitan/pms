@@ -8,11 +8,12 @@ import MediaManager from "@/app/admin/programs/[programid]/manage/MediaManager";
 export interface Program {
   id: string;
   name: string;
-  landing_page_url: string;
-  commission_type: string;
-  commission_value: number;
-  currency: string;
-  recurring_commission: boolean;
+  overview?: string;
+  additional_links: {
+    title: string;
+    url: string;
+    description?: string;
+  }[];
   media_files: {
     images?: string[];
     videos?: string[];
@@ -48,20 +49,31 @@ export const ProgramDetailsSection: React.FC<ProgramDetailsSectionProps> = ({
           <CardHeader>
             <CardTitle>Program Details</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h3 className="font-medium text-sm text-gray-500">
-                Landing Page URL
-              </h3>
-              <p className="mt-1">{program.landing_page_url}</p>
-            </div>
-            <div>
-              <h3 className="font-medium text-sm text-gray-500">Commission</h3>
-              <p className="mt-1">
-                {program.commission_value} {program.currency} (
-                {program.commission_type})
-                {program.recurring_commission && " - Recurring"}
-              </p>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-700">{program.overview}</p>
+              {program.additional_links.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-2">Additional Links:</h3>
+                  {program.additional_links.map((link, index) => (
+                    <div key={index} className="border-b pb-4 mb-4">
+                      <h4 className="font-bold">{link.title}</h4>
+                      <a
+                        href={link.url}
+                        className="text-blue-500"
+                        target="_blank"
+                      >
+                        {link.url}
+                      </a>
+                      {link.description && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          {link.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -19,18 +19,18 @@ export default function AdditionalLinksForm({
   programId,
   existingLinks,
 }: AdditionalLinksFormProps) {
-  const [links, setLinks] = useState<Link[]>([]);
+  const [links, setLinks] = useState<Link[]>(existingLinks);
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const router = useRouter();
 
   const handleAddLink = () => {
     setIsAdding(true);
-    setLinks([{ title: "", url: "", description: "" }]);
+    setLinks([...links, { title: "", url: "", description: "" }]);
   };
 
   const handleCancel = () => {
     setIsAdding(false);
-    setLinks([]);
+    setLinks(existingLinks);
   };
 
   const handleChange = (index: number, field: keyof Link, value: string) => {
@@ -41,16 +41,11 @@ export default function AdditionalLinksForm({
   };
 
   const handleSubmit = async () => {
-    // Filter out empty links
-    const newLinks = links.filter((link) => link.title && link.url);
-    // Combine existing links with new links
-    const updatedLinks = [...existingLinks, ...newLinks];
-
     const supabase = await createClient();
     const { error } = await supabase
       .from("programs")
       .update({
-        additional_links: updatedLinks,
+        additional_links: links,
       })
       .eq("id", programId);
 
@@ -59,7 +54,6 @@ export default function AdditionalLinksForm({
     } else {
       router.refresh();
       setIsAdding(false);
-      setLinks([]);
     }
   };
 

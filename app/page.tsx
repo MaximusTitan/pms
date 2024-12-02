@@ -35,14 +35,15 @@ export default function LandingPage() {
               size="lg"
               className="bg-rose-500 hover:bg-rose-600 text-white"
             >
-              <Link href="/sign-up">Become a Partner</Link>
+              {" "}
+              <Link href="/sign-up">Sign Up</Link>
             </Button>
             <Button
               size="lg"
               variant="outline"
               className="border-rose-500 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950"
             >
-              Learn More
+              <Link href="/sign-in">Log in</Link>
             </Button>
           </div>
         </motion.div>

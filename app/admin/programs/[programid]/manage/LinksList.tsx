@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
-import { Trash2, Edit3 } from "lucide-react";
+import React, { useState } from "react";
+import { Trash2, Edit3, Save, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import AdditionalLinksForm from "./AdditionalLinksForm"; // Ensure import is at the top
+import AdditionalLinksForm from "./AdditionalLinksForm";
 
 interface AdditionalLink {
   title: string;
@@ -19,9 +19,17 @@ interface LinksListProps {
 
 const LinksList: React.FC<LinksListProps> = ({ programId, links }) => {
   const router = useRouter();
+  const [editedLinks, setEditedLinks] = useState<AdditionalLink[]>(links);
+  const [isEditing, setIsEditing] = useState<number | null>(null);
 
   const handleDelete = async (index: number) => {
-    const updatedLinks = links.filter((_, i) => i !== index);
+    if (editedLinks.length <= 1) {
+      alert("At least one link is required.");
+      return;
+    }
+
+    const updatedLinks = editedLinks.filter((_, i) => i !== index);
+    setEditedLinks(updatedLinks);
 
     const supabase = await createClient();
     const { error } = await supabase
@@ -38,38 +46,112 @@ const LinksList: React.FC<LinksListProps> = ({ programId, links }) => {
     }
   };
 
-  const handleEdit = (index: number) => {
-    // Implement edit functionality here, such as opening an edit form/modal
-    console.log(`Edit link at index: ${index}`);
+  const handleEditChange = (
+    index: number,
+    field: keyof AdditionalLink,
+    value: string
+  ) => {
+    const updatedLinks = editedLinks.map((link, i) =>
+      i === index ? { ...link, [field]: value } : link
+    );
+    setEditedLinks(updatedLinks);
+  };
+
+  const handleSave = async (index: number) => {
+    setIsEditing(null);
+
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("programs")
+      .update({
+        additional_links: editedLinks,
+      })
+      .eq("id", programId);
+
+    if (error) {
+      console.error("Error saving link:", error);
+    } else {
+      router.refresh();
+    }
   };
 
   return (
     <>
-      {links.length > 0 ? (
+      {editedLinks.length > 0 ? (
         <ul className="space-y-4">
-          {links.map((link, index) => (
+          {editedLinks.map((link, index) => (
             <li key={index} className="flex items-start">
-              <div className="flex-1">
-                <p className="font-semibold text-rose-500 hover:underline">
-                  {link.title}
-                </p>
-                {link.description && (
-                  <p className="text-sm text-gray-700">{link.description}</p>
-                )}
-              </div>
+              {isEditing === index ? (
+                <div className="flex-1 space-y-2">
+                  <input
+                    type="text"
+                    value={link.title}
+                    onChange={(e) =>
+                      handleEditChange(index, "title", e.target.value)
+                    }
+                    className="w-full p-2 border rounded"
+                  />
+                  <input
+                    type="text"
+                    value={link.url}
+                    onChange={(e) =>
+                      handleEditChange(index, "url", e.target.value)
+                    }
+                    className="w-full p-2 border rounded"
+                  />
+                  <input
+                    type="text"
+                    value={link.description || ""}
+                    onChange={(e) =>
+                      handleEditChange(index, "description", e.target.value)
+                    }
+                    className="w-full p-2 border rounded"
+                  />
+                </div>
+              ) : (
+                <div className="flex-1">
+                  <p className="font-semibold text-rose-500 hover:underline">
+                    {link.title}
+                  </p>
+                  {link.description && (
+                    <p className="text-sm text-gray-700">{link.description}</p>
+                  )}
+                </div>
+              )}
               <div className="ml-4 flex space-x-2">
-                <button
-                  onClick={() => handleEdit(index)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <Edit3 className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => handleDelete(index)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+                {isEditing === index ? (
+                  <>
+                    <button
+                      onClick={() => handleSave(index)}
+                      className="text-green-500 hover:text-green-700"
+                    >
+                      <Save className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setIsEditing(null)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <XCircle className="h-4 w-4" />
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setIsEditing(index)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </button>
+                    {editedLinks.length > 1 && (
+                      <button
+                        onClick={() => handleDelete(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             </li>
           ))}
@@ -77,9 +159,7 @@ const LinksList: React.FC<LinksListProps> = ({ programId, links }) => {
       ) : (
         <p className="text-gray-500">No links available.</p>
       )}
-
-      {/* Display the form to add new links */}
-      <AdditionalLinksForm programId={programId} existingLinks={links} />
+      <AdditionalLinksForm programId={programId} existingLinks={editedLinks} />
     </>
   );
 };

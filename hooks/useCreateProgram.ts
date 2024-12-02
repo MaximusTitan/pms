@@ -13,11 +13,8 @@ export function useCreateProgram(onSuccess: (program: Program) => void) {
 
   const [formData, setFormData] = useState<ProgramFormData>({
     name: "",
-    additional_links: [], // Ensured as initialized
-    commission_type: "fixed",
-    commission_value: 0,
-    currency: "USD",
-    recurring_commission: false,
+    overview: "",
+    additional_links: [{ title: "", url: "", description: "" }],
     media_files: {
       images: [],
       videos: [],
@@ -36,20 +33,20 @@ export function useCreateProgram(onSuccess: (program: Program) => void) {
       setErrors({});
       switch (step) {
         case 1:
+          // Validate name and overview
           programFormSchema.pick({
             name: true,
-            additional_links: true,
+            overview: true,
           }).parse(formData);
           break;
         case 2:
+          // Validate additional links
           programFormSchema.pick({
-            commission_type: true,
-            commission_value: true,
-            currency: true,
+            additional_links: true,
           }).parse(formData);
           break;
         case 3:
-          // File uploads are optional but should be valid if present
+          // No validation needed for media files in this step
           return true;
         default:
           return false;
@@ -60,7 +57,7 @@ export function useCreateProgram(onSuccess: (program: Program) => void) {
         const newErrors: Record<string, string> = {};
         error.errors.forEach((err) => {
           if (err.path) {
-            newErrors[err.path[0]] = err.message;
+            newErrors[err.path.join(".")] = err.message;
           }
         });
         setErrors(newErrors);
@@ -181,11 +178,8 @@ export function useCreateProgram(onSuccess: (program: Program) => void) {
         // Reset form data after successful creation
         setFormData({
           name: "",
+          overview: "",
           additional_links: [],
-          commission_type: "fixed",
-          commission_value: 0,
-          currency: "USD",
-          recurring_commission: false,
           media_files: {
             images: [],
             videos: [],

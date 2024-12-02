@@ -6,15 +6,18 @@ export interface MediaFiles {
   pdfs?: string[];
 }
 
+export interface Link {
+  title: string;
+  url: string;
+  description?: string;
+}
+
 export interface Program {
   id: string;
   user_id: string | null;
   name: string;
-  additional_links: string[]; // Ensured as required
-  commission_type: string;
-  commission_value: number;
-  currency: string;
-  recurring_commission: boolean;
+  overview?: string;
+  additional_links: Link[];
   media_files: MediaFiles | null;
   created_at: string;
   updated_at: string;
@@ -28,11 +31,14 @@ export interface FileInputState {
 
 export const programFormSchema = z.object({
   name: z.string().min(1, "Program name is required"),
-  additional_links: z.array(z.string().url("Invalid URL")), // Removed .optional()
-  commission_type: z.enum(["fixed", "percentage"]),
-  commission_value: z.number().min(0.01, "Commission value must be greater than 0"),
-  currency: z.string().min(1, "Currency is required"),
-  recurring_commission: z.boolean(),
+  overview: z.string().optional(),
+  additional_links: z.array(
+    z.object({
+      title: z.string().min(1, "Title is required"),
+      url: z.string().url("Invalid URL"),
+      description: z.string().optional(),
+    })
+  ),
   media_files: z.object({
     images: z.array(z.string().url()),
     videos: z.array(z.string().url()),

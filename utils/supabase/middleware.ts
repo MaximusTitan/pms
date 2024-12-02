@@ -20,45 +20,45 @@ export const updateSession = async (request: NextRequest) => {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value),
+              request.cookies.set(name, value)
             );
             response = NextResponse.next({
               request,
             });
             cookiesToSet.forEach(({ name, value, options }) =>
-              response.cookies.set(name, value, options),
+              response.cookies.set(name, value, options)
             );
           },
         },
-      },
+      }
     );
 
-    // Refresh session if expired - required for Server Components
-    const { data: user, error } = await supabase.auth.getUser();
+    // Optional: Add a timeout or short-circuit for non-protected routes
+    const isProtectedRoute = (pathname: string) => {
+      const protectedPrefixes = [
+        "/tools", 
+        "/dashboard", 
+        "/chatbot", 
+        "/protected", 
+        "/history", 
+        "/rooms"
+      ];
+      return protectedPrefixes.some(prefix => pathname.startsWith(prefix));
+    };
 
-    // Define protected routes
-    const isProtectedRoute = (pathname: string) =>
-      pathname.startsWith("/tools") ||
-      pathname.startsWith("/dashboard") ||
-      pathname.startsWith("/chatbot") ||
-      pathname.startsWith("/protected") ||
-      pathname.startsWith("/history") ||
-      pathname.startsWith("/rooms");
+    // Only perform authentication check for protected routes
+    if (isProtectedRoute(request.nextUrl.pathname)) {
+      const { data: user, error } = await supabase.auth.getUser();
 
-    // Redirect to /sign-in if accessing protected routes without authentication
-    if (isProtectedRoute(request.nextUrl.pathname) && error) {
-      return NextResponse.redirect(new URL("/sign-in", request.url));
-    }
-
-    // Redirect / to /tools if the user is authenticated
-    if (request.nextUrl.pathname === "/" && !error) {
-      return NextResponse.redirect(new URL("/", request.url));
+      if (error) {
+        return NextResponse.redirect(new URL("/sign-in", request.url));
+      }
     }
 
     // Allow the request to proceed for other cases
     return response;
   } catch (e) {
-    // Handle errors (e.g., missing environment variables)
+    console.error("Middleware Error:", e);
     return NextResponse.next({
       request: {
         headers: request.headers,
