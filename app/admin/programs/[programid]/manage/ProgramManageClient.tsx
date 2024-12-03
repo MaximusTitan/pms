@@ -3,11 +3,13 @@
 import React, { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import AffiliateAssignmentForm from "./AffiliateAssignmentForm"; // Ensure this is a client component
-import { Trash2 } from "lucide-react";
+import { Copy, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast"; // Import the useToast hook
 
 interface Affiliate {
   id: number;
+  affiliate_id: string; // Add affiliate_id from affiliates table
   full_name: string;
   work_email: string;
 }
@@ -25,6 +27,7 @@ interface DatabaseAffiliateProgram {
   assigned_at: string;
   affiliate: {
     id: number;
+    affiliate_id: string;
     full_name: string;
     work_email: string;
   };
@@ -37,11 +40,13 @@ interface RawDatabaseResponse {
   affiliate:
     | {
         id: number;
+        affiliate_id: string;
         full_name: string;
         work_email: string;
       }
     | {
         id: number;
+        affiliate_id: string;
         full_name: string;
         work_email: string;
       }[];
@@ -49,11 +54,14 @@ interface RawDatabaseResponse {
 
 interface ProgramManageClientProps {
   programId: string;
+  programUrl: string; // Add the programUrl prop
 }
 
 const ProgramManageClient: React.FC<ProgramManageClientProps> = ({
   programId,
+  programUrl, // Destructure programUrl
 }) => {
+  const { toast } = useToast(); // Initialize the toast
   const [allAffiliates, setAllAffiliates] = useState<Affiliate[]>([]);
   const [assignedAffiliates, setAssignedAffiliates] = useState<
     AssignedAffiliate[]
@@ -65,7 +73,7 @@ const ProgramManageClient: React.FC<ProgramManageClientProps> = ({
         const supabase = await createClient();
         const { data, error } = await supabase
           .from("affiliates")
-          .select("id, full_name, work_email");
+          .select("id, affiliate_id, full_name, work_email"); // Include affiliate_id
 
         if (error) {
           console.error("Error fetching affiliates:", error);
@@ -90,6 +98,7 @@ const ProgramManageClient: React.FC<ProgramManageClientProps> = ({
           assigned_at,
           affiliate:affiliates (
             id,
+            affiliate_id,
             full_name,
             work_email
           )
@@ -150,6 +159,16 @@ const ProgramManageClient: React.FC<ProgramManageClientProps> = ({
     }
   };
 
+  const handleCopy = (url: string) => {
+    navigator.clipboard.writeText(url);
+    // Replace alert with toast notification
+    toast({
+      title: "Copied!",
+      description: "URL copied to clipboard.",
+      variant: "default",
+    });
+  };
+
   return (
     <>
       <AffiliateAssignmentForm
@@ -159,22 +178,53 @@ const ProgramManageClient: React.FC<ProgramManageClientProps> = ({
 
       {/* Display Assigned Affiliates */}
       {assignedAffiliates && assignedAffiliates.length > 0 ? (
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold">Assigned Affiliates</h3>
-          <ul className="list-disc list-inside">
+        <div className="mt-6">
+          <h3 className="text-xl font-semibold text-gray-800 mb-4">
+            Assigned Affiliates
+          </h3>
+          <ul className="space-y-4">
             {assignedAffiliates.map((assignment) => (
-              <li key={assignment.affiliate_id} className="flex items-center">
-                <span className="flex-1">
-                  {assignment.affiliate
-                    ? `${assignment.affiliate.full_name} (${assignment.affiliate.work_email})`
-                    : "No affiliate details available"}
-                </span>
-                <button
-                  onClick={() => handleUnassign(assignment.affiliate_id)}
-                  className="ml-2 text-red-500 hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
+              <li
+                key={assignment.affiliate_id}
+                className="flex items-center justify-between p-4 bg-gray-50 rounded-lg shadow-sm"
+              >
+                <div>
+                  <p className="text-lg text-gray-700">
+                    {assignment.affiliate.full_name}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {assignment.affiliate.work_email}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-4">
+                  {/* Display the program URL as a clickable link */}
+                  <a
+                    href={`${programUrl}?sourceId=${assignment.affiliate.affiliate_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-500 hover:underline break-all"
+                  >
+                    {`${programUrl}?sourceId=${assignment.affiliate.affiliate_id}`}
+                  </a>
+                  <button
+                    onClick={() =>
+                      handleCopy(
+                        `${programUrl}?sourceId=${assignment.affiliate.affiliate_id}`
+                      )
+                    }
+                    className="text-neutral-500 hover:text-neutral-700"
+                    aria-label="Copy URL"
+                  >
+                    <Copy className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={() => handleUnassign(assignment.affiliate_id)}
+                    className="text-red-500 hover:text-red-700"
+                    aria-label="Unassign Affiliate"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

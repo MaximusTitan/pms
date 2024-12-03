@@ -39,6 +39,7 @@ interface Program {
 
 interface Affiliate {
   id: number;
+  affiliate_id: string; // Add affiliate_id from affiliates table
   full_name: string;
   work_email: string;
 }
@@ -135,6 +136,17 @@ async function getProgram(programId: string): Promise<Program | null> {
   }
 }
 
+// Add a slugify function to create URL-friendly slugs
+function slugify(text: string): string {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-") // Replace spaces with -
+    .replace(/[^\w\-]+/g, "") // Remove all non-word chars
+    .replace(/\-\-+/g, "-"); // Replace multiple - with single -
+}
+
 // Update page component
 export default async function ProgramManagePage({ params }: PageProps) {
   try {
@@ -145,6 +157,9 @@ export default async function ProgramManagePage({ params }: PageProps) {
       notFound();
       return null;
     }
+
+    // Construct the program URL using the slugified program name
+    const programUrl = `https://www.ischoolofai.com/${slugify(program.name)}`;
 
     return (
       <div className="container mx-auto p-4">
@@ -178,6 +193,20 @@ export default async function ProgramManagePage({ params }: PageProps) {
           </CardContent>
         </Card>
 
+        {/* Assign and Display Affiliates */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Affiliates</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Render the client component */}
+            <ProgramManageClient
+              programId={program.id}
+              programUrl={programUrl}
+            />
+          </CardContent>
+        </Card>
+
         {/* Media Manager */}
         <Card className="mb-6">
           <CardHeader>
@@ -188,17 +217,6 @@ export default async function ProgramManagePage({ params }: PageProps) {
               mediaFiles={program.media_files}
               programId={program.id}
             />
-          </CardContent>
-        </Card>
-
-        {/* Assign and Display Affiliates */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Affiliates</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Render the client component */}
-            <ProgramManageClient programId={program.id} />
           </CardContent>
         </Card>
       </div>

@@ -110,9 +110,15 @@ const LinksList: React.FC<LinksListProps> = ({ programId, links }) => {
                 </div>
               ) : (
                 <div className="flex-1">
-                  <p className="font-semibold text-rose-500 hover:underline">
-                    {link.title}
-                  </p>
+                  <p className="font-semibold text-gray-800">{link.title}</p>
+                  <a
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-rose-500 hover:underline"
+                  >
+                    {link.url}
+                  </a>
                   {link.description && (
                     <p className="text-sm text-gray-700">{link.description}</p>
                   )}

@@ -34,6 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import CountUp from "react-countup"; // Add import for CountUp
 
 interface Lead {
   id: number;
@@ -172,17 +173,30 @@ const ReportsPage: React.FC = () => {
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Reports Management</h1>
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-cyan-500 text-white p-6 rounded-lg text-center text-3xl font-bold">
-          {leads.length} Leads
+
+      {/* Summary Numbers */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-lg shadow p-4 text-center">
+          <p className="text-lg font-semibold">Total Leads</p>
+          <p className="text-2xl font-bold">
+            <CountUp start={0} end={leads.length} duration={2} />
+          </p>
         </div>
-        <div className="bg-rose-500 text-white p-6 rounded-lg text-center text-3xl font-bold">
-          {totalDemos} Demos
+        <div className="bg-white rounded-lg shadow p-4 text-center">
+          <p className="text-lg font-semibold">Total Demos</p>
+          <p className="text-2xl font-bold">
+            <CountUp start={0} end={totalDemos} duration={2} />
+          </p>
         </div>
-        <div className="bg-emerald-500 text-white p-6 rounded-lg text-center text-3xl font-bold">
-          {totalSales} Sales
+        <div className="bg-white rounded-lg shadow p-4 text-center">
+          <p className="text-lg font-semibold">Total Sales</p>
+          <p className="text-2xl font-bold">
+            <CountUp start={0} end={totalSales} duration={2} />
+          </p>
         </div>
       </div>
+
+      {/* Existing Charts */}
       <div className="bg-white rounded-lg shadow p-6">
         <Card>
           <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">

@@ -1,18 +1,243 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/utils/supabase/client";
+
+interface Affiliate {
+  id: number;
+  full_name: string;
+  work_email: string;
+  status: string;
+  // ...other fields...
+}
+
+interface Lead {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  // ...other fields...
+}
+
+interface Program {
+  id: number;
+  name: string;
+  created_at: string;
+  status: string;
+  // ...other fields...
+}
+
+interface Report {
+  totalLeads: number;
+  totalAffiliates: number;
+  totalPrograms: number;
+  activePrograms: number;
+  pendingAffiliates: number;
+  totalDemos: number; // Added property
+  totalSales: number; // Added property
+  // ...other fields...
+}
 
 export default function AdminPage() {
+  const supabase = createClient();
+  const [latestAffiliates, setLatestAffiliates] = useState<Affiliate[]>([]);
+  const [latestLeads, setLatestLeads] = useState<Lead[]>([]);
+  const [latestPrograms, setLatestPrograms] = useState<Program[]>([]);
+  const [reportNumbers, setReportNumbers] = useState<Report | null>(null);
+
+  useEffect(() => {
+    // Fetch latest affiliates
+    const fetchAffiliates = async () => {
+      const { data } = await supabase
+        .from("affiliates")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(5);
+      setLatestAffiliates(data || []);
+    };
+
+    // Fetch latest leads
+    const fetchLeads = async () => {
+      const { data } = await supabase
+        .from("leads")
+        .select("*")
+        .order("create_date", { ascending: false })
+        .limit(5);
+      setLatestLeads(data || []);
+    };
+
+    // Fetch latest programs
+    const fetchPrograms = async () => {
+      const { data } = await supabase
+        .from("programs")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(5);
+      setLatestPrograms(data || []);
+    };
+
+    // Fetch report numbers with totalDemos and totalSales
+    const fetchReports = async () => {
+      const { data } = await supabase
+        .from("reports")
+        .select(
+          "totalLeads, totalAffiliates, totalPrograms, activePrograms, pendingAffiliates, totalDemos, totalSales"
+        )
+        .single();
+      setReportNumbers(data || null);
+    };
+
+    fetchAffiliates();
+    fetchLeads();
+    fetchPrograms();
+    fetchReports();
+  }, [supabase]);
+
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
-      <div className="grid gap-4">
-        <div className="p-4 bg-white rounded-lg shadow">
-          <h2 className="text-lg font-semibold">Welcome to Admin Panel</h2>
-          <p className="text-gray-600">
-            Manage your application settings here.
-          </p>
+    <div className="p-6 bg-white min-h-screen">
+      <h1 className="text-3xl font-bold mb-8 text-center">Admin Dashboard</h1>
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+        <div className="bg-white rounded-lg shadow p-4 text-center">
+          <p className="text-lg font-semibold">Total Leads</p>
+          <p className="text-2xl">{reportNumbers?.totalLeads || 0}</p>
         </div>
+        <div className="bg-white rounded-lg shadow p-4 text-center">
+          <p className="text-lg font-semibold">Total Demos</p>
+          <p className="text-2xl">{reportNumbers?.totalDemos || 0}</p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-4 text-center">
+          <p className="text-lg font-semibold">Total Sales</p>
+          <p className="text-2xl">{reportNumbers?.totalSales || 0}</p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-4 text-center">
+          <p className="text-lg font-semibold">Active Programs</p>
+          <p className="text-2xl">{reportNumbers?.activePrograms || 0}</p>
+        </div>
+        <div className="bg-white rounded-lg shadow p-4 text-center">
+          <p className="text-lg font-semibold">Pending Affiliates</p>
+          <p className="text-2xl">{reportNumbers?.pendingAffiliates || 0}</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Latest Affiliates */}
+        <div className="p-6 bg-white rounded-lg shadow">
+          <h3 className="text-xl font-semibold mb-4">Latest Affiliates</h3>
+          <ul className="mb-4">
+            {latestAffiliates
+              .filter((a) => a.full_name)
+              .map((affiliate) => (
+                <li key={affiliate.id} className="border-b py-2">
+                  <p className="font-medium">{affiliate.full_name}</p>
+                  {/* Additional Details */}
+                  <p className="text-sm text-gray-600">
+                    Email: {affiliate.work_email}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Status: {affiliate.status}
+                  </p>
+                </li>
+              ))}
+          </ul>
+          <Button
+            variant="outline"
+            className="w-full border-gray-300 hover:bg-gray-100"
+            onClick={() => (window.location.href = "/admin/affiliates")}
+          >
+            View All Affiliates
+          </Button>
+        </div>
+
+        {/* Latest Leads */}
+        <div className="p-6 bg-white rounded-lg shadow">
+          <h3 className="text-xl font-semibold mb-4">Latest Leads</h3>
+          <ul className="mb-4">
+            {latestLeads
+              .filter((l) => l.first_name)
+              .map((lead) => (
+                <li key={lead.id} className="border-b py-2">
+                  <p className="font-medium">
+                    {lead.first_name} {lead.last_name}
+                  </p>
+                  {/* Additional Details */}
+                  <p className="text-sm text-gray-600">Email: {lead.email}</p>
+                  <p className="text-sm text-gray-600">Phone: {lead.phone}</p>
+                </li>
+              ))}
+          </ul>
+          <Button
+            variant="outline"
+            className="w-full border-gray-300 hover:bg-gray-100"
+            onClick={() => (window.location.href = "/leads")}
+          >
+            View All Leads
+          </Button>
+        </div>
+
+        {/* Latest Programs */}
+        <div className="p-6 bg-white rounded-lg shadow">
+          <h3 className="text-xl font-semibold mb-4">Latest Programs</h3>
+          <ul className="mb-4">
+            {latestPrograms.map((program) => (
+              <li key={program.id} className="border-b py-2">
+                <p className="font-medium">{program.name}</p>
+                {/* Additional Details */}
+                <p className="text-sm text-gray-600">
+                  Created At:{" "}
+                  {new Date(program.created_at).toLocaleDateString()}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Status: {program.status}
+                </p>
+              </li>
+            ))}
+          </ul>
+          <Button
+            variant="outline"
+            className="w-full border-gray-300 hover:bg-gray-100"
+            onClick={() => (window.location.href = "/admin/programs")}
+          >
+            View All Programs
+          </Button>
+        </div>
+
+        {/* Reports Summary */}
+        {reportNumbers && (
+          <div className="p-6 bg-white rounded-lg shadow">
+            <h3 className="text-xl font-semibold mb-4">Reports Summary</h3>
+            <div className="space-y-2">
+              <p>
+                <span className="font-semibold">Total Leads:</span>{" "}
+                {reportNumbers.totalLeads}
+              </p>
+              <p>
+                <span className="font-semibold">Total Affiliates:</span>{" "}
+                {reportNumbers.totalAffiliates}
+              </p>
+              <p>
+                <span className="font-semibold">Total Programs:</span>{" "}
+                {reportNumbers.totalPrograms}
+              </p>
+              {/* Additional Details */}
+              <p>
+                <span className="font-semibold">Active Programs:</span>{" "}
+                {reportNumbers.activePrograms}
+              </p>
+              <p>
+                <span className="font-semibold">Pending Affiliates:</span>{" "}
+                {reportNumbers.pendingAffiliates}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              className="w-full border-gray-300 hover:bg-gray-100 mt-4"
+              onClick={() => (window.location.href = "/admin/reports")}
+            >
+              View Detailed Reports
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
