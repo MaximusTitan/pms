@@ -69,8 +69,38 @@ const ReportsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [timeRange, setTimeRange] = useState<"30d" | "90d" | "180d">("90d"); // Existing state
-  const [partnerId, setPartnerId] = useState<string>(""); // Existing PartnerID state
-  const [partnerIds, setPartnerIds] = useState<string[]>([]); // Added PartnerIDs state
+  const [partnerId, setPartnerId] = useState<string>("all"); // Initialize partnerId to "all" to represent selecting all partners
+  const [partnerIds, setPartnerIds] = useState<string[]>([]); // Ensures partnerIds is an array of strings
+
+  useEffect(() => {
+    const fetchPartnerIds = async () => {
+      try {
+        const { data, error } = await client
+          .from("leads")
+          .select("partner_id")
+          .neq("partner_id", null);
+
+        if (error) throw error;
+        if (data) {
+          const uniquePartners = Array.from(
+            new Set(
+              (data as Lead[])
+                .map((lead) => lead.partner_id)
+                .filter(
+                  (id): id is string =>
+                    typeof id === "string" && /^[A-Z]+$/.test(id)
+                )
+            )
+          );
+          setPartnerIds(uniquePartners);
+        }
+      } catch (err: any) {
+        console.error("Error fetching partner IDs:", err.message);
+      }
+    };
+
+    fetchPartnerIds();
+  }, []); // Fetch once on mount
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -79,8 +109,9 @@ const ReportsPage: React.FC = () => {
         const query = client
           .from("leads")
           .select("hs_lead_status, create_date, partner_id");
-        if (partnerId) {
-          query.eq("partner_id", partnerId); // Existing PartnerID filter
+        if (partnerId !== "all") {
+          // Apply filter only if a specific partner is selected
+          query.eq("partner_id", partnerId);
         }
         const { data, error } = await query.order("create_date", {
           ascending: true,
@@ -89,15 +120,7 @@ const ReportsPage: React.FC = () => {
         if (error) throw error;
         if (data) {
           setLeads(data as Lead[]);
-          // Extract unique PartnerIDs
-          const uniquePartners = Array.from(
-            new Set(
-              (data as Lead[])
-                .map((lead) => lead.partner_id)
-                .filter((id): id is string => id !== null)
-            )
-          );
-          setPartnerIds(uniquePartners);
+          // Removed setting partnerIds here
         }
       } catch (err: any) {
         setError(err.message);
@@ -172,7 +195,33 @@ const ReportsPage: React.FC = () => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Reports Management</h1>
+      {/* Adjust layout to position Select on the right */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Reports Management</h1>
+        <Select
+          value={partnerId}
+          onValueChange={(value: string) => setPartnerId(value)}
+        >
+          <SelectTrigger
+            className="w-[160px] rounded-lg"
+            aria-label="Select Partner"
+          >
+            <SelectValue placeholder="All" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl">
+            {/* Add "All" option with a non-empty value */}
+            <SelectItem key="all" value="all" className="rounded-lg">
+              All
+            </SelectItem>
+            {/* Existing Partner Options */}
+            {partnerIds.map((partner) => (
+              <SelectItem key={partner} value={partner} className="rounded-lg">
+                {partner}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Summary Numbers */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -206,28 +255,7 @@ const ReportsPage: React.FC = () => {
                 Showing Demo and Sale leads over time
               </CardDescription>
             </div>
-            <Select
-              value={partnerId}
-              onValueChange={(value: string) => setPartnerId(value)} // Handle PartnerID change
-            >
-              <SelectTrigger
-                className="w-[160px] rounded-lg sm:ml-auto"
-                aria-label="Select Partner"
-              >
-                <SelectValue placeholder="Select Partner" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                {partnerIds.map((partner) => (
-                  <SelectItem
-                    key={partner}
-                    value={partner}
-                    className="rounded-lg"
-                  >
-                    {partner}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Removed Partner Select from here */}
             <Select
               value={timeRange}
               onValueChange={(value: string) => {

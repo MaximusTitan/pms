@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/utils/supabase/client";
+import CountUp from "react-countup";
 
 interface Affiliate {
   id: number;
@@ -18,6 +19,7 @@ interface Lead {
   last_name: string;
   email: string;
   phone: string;
+  hs_lead_status: string | null;
   // ...other fields...
 }
 
@@ -31,13 +33,10 @@ interface Program {
 
 interface Report {
   totalLeads: number;
-  totalAffiliates: number;
-  totalPrograms: number;
+  totalDemos: number;
+  totalSales: number;
   activePrograms: number;
   pendingAffiliates: number;
-  totalDemos: number; // Added property
-  totalSales: number; // Added property
-  // ...other fields...
 }
 
 export default function AdminPage() {
@@ -78,15 +77,37 @@ export default function AdminPage() {
       setLatestPrograms(data || []);
     };
 
-    // Fetch report numbers with totalDemos and totalSales
+    // Fetch report numbers directly from tables
     const fetchReports = async () => {
-      const { data } = await supabase
-        .from("reports")
-        .select(
-          "totalLeads, totalAffiliates, totalPrograms, activePrograms, pendingAffiliates, totalDemos, totalSales"
-        )
-        .single();
-      setReportNumbers(data || null);
+      const [
+        totalLeadsRes,
+        totalDemosRes,
+        totalSalesRes,
+        activeProgramsRes,
+        pendingAffiliatesRes,
+      ] = await Promise.all([
+        supabase.from("leads").select("id", { count: "exact", head: true }),
+        supabase
+          .from("leads")
+          .select("id", { count: "exact", head: true })
+          .eq("hs_lead_status", "Orientation scheduled"),
+        supabase
+          .from("leads")
+          .select("id", { count: "exact", head: true })
+          .eq("hs_lead_status", "Lead transformed"),
+        supabase.from("programs").select("id", { count: "exact", head: true }),
+        supabase
+          .from("affiliates")
+          .select("id", { count: "exact", head: true }),
+      ]);
+
+      setReportNumbers({
+        totalLeads: totalLeadsRes.count || 0,
+        totalDemos: totalDemosRes.count || 0,
+        totalSales: totalSalesRes.count || 0,
+        activePrograms: activeProgramsRes.count || 0,
+        pendingAffiliates: pendingAffiliatesRes.count || 0,
+      });
     };
 
     fetchAffiliates();
@@ -97,27 +118,37 @@ export default function AdminPage() {
 
   return (
     <div className="p-6 bg-white min-h-screen">
-      <h1 className="text-3xl font-bold mb-8 text-center">Admin Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <div className="bg-white rounded-lg shadow p-4 text-center">
           <p className="text-lg font-semibold">Total Leads</p>
-          <p className="text-2xl">{reportNumbers?.totalLeads || 0}</p>
+          <p className="text-2xl font-bold">
+            <CountUp end={reportNumbers?.totalLeads || 0} />
+          </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4 text-center">
           <p className="text-lg font-semibold">Total Demos</p>
-          <p className="text-2xl">{reportNumbers?.totalDemos || 0}</p>
+          <p className="text-2xl font-bold">
+            <CountUp end={reportNumbers?.totalDemos || 0} />
+          </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4 text-center">
           <p className="text-lg font-semibold">Total Sales</p>
-          <p className="text-2xl">{reportNumbers?.totalSales || 0}</p>
+          <p className="text-2xl font-bold">
+            <CountUp end={reportNumbers?.totalSales || 0} />
+          </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4 text-center">
           <p className="text-lg font-semibold">Active Programs</p>
-          <p className="text-2xl">{reportNumbers?.activePrograms || 0}</p>
+          <p className="text-2xl font-bold">
+            <CountUp end={reportNumbers?.activePrograms || 0} />
+          </p>
         </div>
         <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-lg font-semibold">Pending Affiliates</p>
-          <p className="text-2xl">{reportNumbers?.pendingAffiliates || 0}</p>
+          <p className="text-lg font-semibold">Total Affiliates</p>
+          <p className="text-2xl font-bold">
+            <CountUp end={reportNumbers?.pendingAffiliates || 0} />
+          </p>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -212,20 +243,19 @@ export default function AdminPage() {
                 {reportNumbers.totalLeads}
               </p>
               <p>
-                <span className="font-semibold">Total Affiliates:</span>{" "}
-                {reportNumbers.totalAffiliates}
+                <span className="font-semibold">Total Demos:</span>{" "}
+                {reportNumbers.totalDemos}
               </p>
               <p>
-                <span className="font-semibold">Total Programs:</span>{" "}
-                {reportNumbers.totalPrograms}
+                <span className="font-semibold">Total Sales:</span>{" "}
+                {reportNumbers.totalSales}
               </p>
-              {/* Additional Details */}
               <p>
                 <span className="font-semibold">Active Programs:</span>{" "}
                 {reportNumbers.activePrograms}
               </p>
               <p>
-                <span className="font-semibold">Pending Affiliates:</span>{" "}
+                <span className="font-semibold">Total Affiliates:</span>{" "}
                 {reportNumbers.pendingAffiliates}
               </p>
             </div>

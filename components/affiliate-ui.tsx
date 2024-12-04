@@ -31,6 +31,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { Search, ArrowUpDown } from "lucide-react"; // Add this import
+import Link from "next/link"; // Add this import
 
 interface Affiliate {
   id: number;
@@ -244,6 +245,11 @@ export function AffiliateUI() {
 
     return (
       <div className="space-y-4">
+        {/* Add tip */}
+        <div className="mb-4 text-sm text-muted-foreground">
+          Tip: Click on a partner's name to open their management panel.
+        </div>
+
         {/* Add search bar */}
         <div className="flex justify-end mb-4">
           <div className="relative w-96">
@@ -273,12 +279,20 @@ export function AffiliateUI() {
                   </SortableHeader>
                   <SortableHeader field="status">Status</SortableHeader>
                   <SortableHeader field="created_at">Created At</SortableHeader>
+                  {/* Remove the Edit column header */}
+                  {/* <TableHead>Edit</TableHead> */}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedItems.map((affiliate) => (
                   <TableRow key={affiliate.id}>
-                    <TableCell>{affiliate.full_name}</TableCell>
+                    <TableCell>
+                      <Link
+                        href={`/admin/affiliates/${affiliate.affiliate_id}/manage`}
+                      >
+                        {affiliate.full_name}
+                      </Link>
+                    </TableCell>
                     <TableCell>{affiliate.work_email}</TableCell>
                     <TableCell>{affiliate.affiliate_id}</TableCell>
                     <TableCell>
@@ -324,6 +338,8 @@ export function AffiliateUI() {
                         minute: "2-digit",
                       })}
                     </TableCell>
+                    {/* Remove the Edit button cell */}
+                    {/* 
                     <TableCell>
                       <Button
                         variant="outline"
@@ -335,7 +351,8 @@ export function AffiliateUI() {
                       >
                         Edit
                       </Button>
-                    </TableCell>
+                    </TableCell> 
+                    */}
                   </TableRow>
                 ))}
               </TableBody>
