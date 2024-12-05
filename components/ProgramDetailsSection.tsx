@@ -86,6 +86,7 @@ export const ProgramDetailsSection: React.FC<ProgramDetailsSectionProps> = ({
             <MediaManager
               mediaFiles={program.media_files}
               programId={program.id}
+              isAdmin={true}
             />
           </CardContent>
         </Card>

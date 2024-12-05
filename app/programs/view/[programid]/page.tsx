@@ -8,7 +8,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
 type PageProps = {
-  params: { programid: string };
+  params: Promise<{ programid: string }>; // Mark params as a Promise
 };
 
 interface Program {
@@ -31,14 +31,8 @@ interface Program {
   affiliate_id?: string; // Add affiliate_id to Program interface
 }
 
-async function getAffiliateId(userId: string): Promise<string | null> {
-  // Function to fetch affiliate_id from affiliates table
-  // ...implementation...
-  return null; // Replace with actual logic
-}
-
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
-  const params = await props.params;
+  const params = await props.params; // Await params
   try {
     const program = await getProgram(params.programid);
     return {
@@ -100,10 +94,6 @@ async function getProgram(programId: string): Promise<Program | null> {
       };
     }
 
-    // Fetch affiliate_id based on user_id
-    const affiliateId = await getAffiliateId(program.user_id);
-    program.affiliate_id = affiliateId;
-
     return program;
   } catch (error) {
     console.error("Error in getProgram:", error);
@@ -112,126 +102,119 @@ async function getProgram(programId: string): Promise<Program | null> {
 }
 
 export default async function ProgramViewPage(props: PageProps) {
-  try {
-    const params = await props.params;
-    const program = await getProgram(params.programid);
+  const params = await props.params; // Await params
+  const program = await getProgram(params.programid);
 
-    if (!program) {
-      notFound();
-      return null;
-    }
+  if (!program) {
+    notFound();
+    return null;
+  }
 
-    console.log("Affiliate ID:", program.affiliate_id); // Log the affiliate_id
+  const supabase = await createClient(); // Ensure createClient is awaited
+  const { data, error } = await supabase.auth.getUser();
+  if (error) {
+    console.error("Error fetching user:", error);
+    // Optionally, handle unauthenticated user
+  }
+  const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",") || [];
 
-    const supabase = await createClient(); // Ensure createClient is awaited
-    const { data, error } = await supabase.auth.getUser();
-    if (error) {
-      console.error("Error fetching user:", error);
-      // Optionally, handle unauthenticated user
-    }
-    const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",") || [];
+  const isAdmin = data?.user?.email
+    ? adminEmails.includes(data.user.email)
+    : false;
 
-    const isAdmin = data?.user?.email
-      ? adminEmails.includes(data.user.email)
-      : false;
+  return (
+    <div className="container mx-auto p-4">
+      <div className="mb-4">
+        <Link
+          href="/programs"
+          className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+        >
+          <ChevronLeft className="h-4 w-4 mr-1" />
+          Back to Programs
+        </Link>
+      </div>
 
-    return (
-      <div className="container mx-auto p-4">
-        <div className="mb-4">
-          <Link
-            href="/programs"
-            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
-          >
-            <ChevronLeft className="h-4 w-4 mr-1" />
-            Back to Programs
-          </Link>
-        </div>
+      {/* Program Name at the Top */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">{program.name}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {program.overview && (
+            <p className="text-sm text-gray-700">{program.overview}</p>
+          )}
+        </CardContent>
+      </Card>
 
-        {/* Program Name at the Top */}
+      {/* Display Links */}
+      {program.additional_links && program.additional_links.length > 0 && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">{program.name}</CardTitle>
+            <CardTitle>Additional Links</CardTitle>
           </CardHeader>
           <CardContent>
-            {program.overview && (
-              <p className="text-sm text-gray-700">{program.overview}</p>
-            )}
+            {program.additional_links.map((link, index) => (
+              <div key={index} className="border-b pb-2 mb-2">
+                <p className="font-bold">{link.title}</p>
+                <a
+                  href={link.url}
+                  className="text-blue-500"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {link.url}
+                </a>
+                {link.description && (
+                  <p className="text-sm text-gray-600">{link.description}</p>
+                )}
+              </div>
+            ))}
           </CardContent>
         </Card>
+      )}
 
-        {/* Display Links */}
-        {program.additional_links && program.additional_links.length > 0 && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Additional Links</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {program.additional_links.map((link, index) => (
-                <div key={index} className="border-b pb-2 mb-2">
-                  <p className="font-bold">{link.title}</p>
-                  <a
-                    href={link.url}
-                    className="text-blue-500"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {link.url}
-                  </a>
-                  {link.description && (
-                    <p className="text-sm text-gray-600">{link.description}</p>
-                  )}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+      {/* Media Manager */}
+      {program.media_files && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Media Files</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MediaManager
+              mediaFiles={program.media_files}
+              programId={program.id}
+              isAdmin={isAdmin} // Ensure isAdmin is passed correctly
+            />
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Media Manager */}
-        {program.media_files && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Media Files</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MediaManager
-                mediaFiles={program.media_files}
-                programId={program.id}
-                isAdmin={isAdmin} // Ensure isAdmin is passed correctly
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Partner Link Section */}
-        {program.affiliate_id && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Partner Link</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center">
-              <input
-                type="text"
-                readOnly
-                value={`https://www.ischoolofai.com/the-genai-master-registration?sourceId=${program.affiliate_id}`}
-                className="flex-1 mr-2 p-2 border rounded"
-              />
-              <button
-                onClick={() =>
-                  navigator.clipboard.writeText(
-                    `https://www.ischoolofai.com/the-genai-master-registration?sourceId=${program.affiliate_id}`
-                  )
-                }
-                className="px-4 py-2 bg-blue-500 text-white rounded"
-              >
-                Copy
-              </button>
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    );
-  } catch (error) {
-    console.error("Page render error:", error);
-    throw error; // Let Next.js error boundary handle it
-  }
+      {/* Partner Link Section */}
+      {program.affiliate_id && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Partner Link</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center">
+            <input
+              type="text"
+              readOnly
+              value={`https://www.ischoolofai.com/the-genai-master-registration?sourceId=${program.affiliate_id}`}
+              className="flex-1 mr-2 p-2 border rounded"
+            />
+            <button
+              onClick={() =>
+                navigator.clipboard.writeText(
+                  `https://www.ischoolofai.com/the-genai-master-registration?sourceId=${program.affiliate_id}`
+                )
+              }
+              className="px-4 py-2 bg-blue-500 text-white rounded"
+            >
+              Copy
+            </button>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
 }
