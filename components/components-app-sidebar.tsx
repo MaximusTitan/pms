@@ -47,7 +47,7 @@ const adminNavData = [
   { title: "Affiliate", url: "/admin/affiliates", icon: Bot },
   { title: "Programs", url: "/admin/programs", icon: BookOpen },
   { title: "Reports", url: "/admin/reports", icon: Settings2 },
-  { title: "Leads", url: "/leads", icon: Bot },
+  { title: "Leads", url: "/admin/leads", icon: Bot },
 ];
 
 const partnerNavData = [
@@ -57,7 +57,9 @@ const partnerNavData = [
     icon: SquareTerminal,
     isActive: true,
   },
-  { title: "Programs", url: "/programs", icon: Bot },
+  { title: "Programs", url: "/programs", icon: BookOpen },
+  { title: "Leads", url: "/leads", icon: Bot },
+  { title: "Reports", url: "/reports", icon: Settings2 },
 ];
 
 const getAdminEmails = () => {

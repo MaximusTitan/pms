@@ -200,7 +200,7 @@ export default function AdminPage() {
           <Button
             variant="outline"
             className="w-full border-gray-300 hover:bg-gray-100"
-            onClick={() => (window.location.href = "/leads")}
+            onClick={() => (window.location.href = "/admin/leads")}
           >
             View All Leads
           </Button>

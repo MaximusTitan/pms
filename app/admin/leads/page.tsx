@@ -93,34 +93,13 @@ const LeadsPage: React.FC = () => {
     const fetchLeads = async () => {
       try {
         setLoading(true);
-
-        // Get current user
-        const {
-          data: { user },
-          error: userError,
-        } = await client.auth.getUser();
-        if (userError) throw userError;
-        if (!user) throw new Error("Not authenticated");
-
-        // Get affiliate info for current user
-        const { data: affiliateData, error: affiliateError } = await client
-          .from("affiliates")
-          .select("affiliate_id")
-          .eq("work_email", user.email)
-          .single();
-
-        if (affiliateError) throw affiliateError;
-        if (!affiliateData) throw new Error("Affiliate not found");
-
-        // Get leads for this affiliate
         const { data, error } = await client
           .from("leads")
           .select("*")
-          .eq("partner_id", affiliateData.affiliate_id)
           .order(sortField, { ascending: sortOrder === "asc" });
 
         if (error) throw error;
-        setLeads(data as Lead[]);
+        if (data) setLeads(data as Lead[]);
       } catch (err: any) {
         setError(err.message);
       } finally {

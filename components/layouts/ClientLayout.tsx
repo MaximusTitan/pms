@@ -20,6 +20,7 @@ export default function ClientLayout({
     pathname.startsWith("/partner") ||
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/programs") ||
+    pathname.startsWith("/reports") ||
     pathname.startsWith("/leads");
 
   return (
