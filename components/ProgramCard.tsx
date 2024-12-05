@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Program } from "@/types/program";
+import { createClient } from "@/utils/supabase/client";
 
 interface ProgramCardProps {
   program: Program;
@@ -16,9 +17,33 @@ interface ProgramCardProps {
 
 export function ProgramCard({ program }: ProgramCardProps) {
   const router = useRouter();
+  const supabase = createClient();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  const getAdminEmails = () => {
+    const emails = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
+    return emails.split(",").map((email) => email.trim());
+  };
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const authorizedEmails = getAdminEmails();
+
+      const isAdminUser = authorizedEmails.includes(user?.email || "");
+
+      setIsAdmin(isAdminUser);
+    };
+    fetchUser();
+  }, [supabase]);
 
   const handleManageClick = () => {
-    const programPath = `/admin/programs/${program.id}/manage`;
+    const programPath = isAdmin
+      ? `/admin/programs/${program.id}/manage` // Pass isAdmin as a query parameter
+      : `/programs/view/${program.id}`;
     console.log("Navigating to:", programPath, "Program ID:", program.id);
     router.push(programPath);
   };
@@ -75,9 +100,10 @@ export function ProgramCard({ program }: ProgramCardProps) {
           onClick={handleManageClick}
           className="w-full bg-rose-500 hover:bg-rose-600"
         >
-          Manage Program
+          {isAdmin ? "Manage Program" : "View Program"}
         </Button>
       </CardFooter>
+      {/* If needed, pass isAdmin to MediaManager or other components */}
     </Card>
   );
 }

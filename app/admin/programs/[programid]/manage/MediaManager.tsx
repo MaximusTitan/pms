@@ -23,11 +23,13 @@ interface MediaFiles {
 interface MediaManagerProps {
   mediaFiles: MediaFiles;
   programId: string;
+  isAdmin: boolean; // Ensure isAdmin is received as a prop
 }
 
 const MediaManager: React.FC<MediaManagerProps> = ({
   mediaFiles,
   programId,
+  isAdmin, // Destructure isAdmin
 }) => {
   const [selectedItem, setSelectedItem] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
@@ -139,24 +141,25 @@ const MediaManager: React.FC<MediaManagerProps> = ({
           return (
             <div key={type} className="bg-white rounded-xl p-6 shadow-sm">
               <h3 className="font-semibold capitalize text-lg mb-4">{type}</h3>
-              <div className="mb-4">
-                {/* Replace input with shadcn Input component */}
-                <Input
-                  type="file"
-                  accept={
-                    type === "images"
-                      ? "image/*"
-                      : type === "videos"
-                        ? "video/*"
-                        : ".pdf"
-                  }
-                  onChange={(e) =>
-                    handleFileChange(e, type as keyof MediaFiles)
-                  }
-                  disabled={uploading}
-                  className="cursor-pointer"
-                />
-              </div>
+              {isAdmin && ( // Use isAdmin to conditionally render upload input
+                <div className="mb-4">
+                  <Input
+                    type="file"
+                    accept={
+                      type === "images"
+                        ? "image/*"
+                        : type === "videos"
+                          ? "video/*"
+                          : ".pdf"
+                    }
+                    onChange={(e) =>
+                      handleFileChange(e, type as keyof MediaFiles)
+                    }
+                    disabled={uploading}
+                    className="cursor-pointer"
+                  />
+                </div>
+              )}
               {mediaArray.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {mediaArray.map((url, index) => {
@@ -197,14 +200,16 @@ const MediaManager: React.FC<MediaManagerProps> = ({
                           >
                             <Maximize2 className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() =>
-                              handleDelete(url, type as keyof MediaFiles)
-                            }
-                            className="text-white bg-black bg-opacity-50 p-1 rounded"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() =>
+                                handleDelete(url, type as keyof MediaFiles)
+                              }
+                              className="text-white bg-black bg-opacity-50 p-1 rounded"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     );

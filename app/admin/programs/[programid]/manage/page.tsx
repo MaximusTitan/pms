@@ -158,6 +158,19 @@ export default async function ProgramManagePage({ params }: PageProps) {
       return null;
     }
 
+    const supabase = await createClient(); // Ensure createClient is awaited
+    const { data, error } = await supabase.auth.getUser();
+    if (error) {
+      console.error("Error fetching user:", error);
+      redirect("/login");
+    }
+
+    const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",") || [];
+
+    const isAdmin = data?.user?.email
+      ? adminEmails.includes(data.user.email)
+      : false;
+
     // Construct the program URL using the slugified program name
     const programUrl = `https://www.ischoolofai.com/${slugify(program.name)}`;
 
@@ -216,6 +229,7 @@ export default async function ProgramManagePage({ params }: PageProps) {
             <MediaManager
               mediaFiles={program.media_files}
               programId={program.id}
+              isAdmin={isAdmin} // Pass isAdmin prop
             />
           </CardContent>
         </Card>
