@@ -101,50 +101,21 @@ const ReportsPage: React.FC = () => {
   }, []); // Add useEffect to fetch affiliateId on mount
 
   useEffect(() => {
-    const fetchPartnerIds = async () => {
-      try {
-        const { data, error } = await client
-          .from("leads")
-          .select("partner_id")
-          .neq("partner_id", null);
-
-        if (error) throw error;
-        if (data) {
-          const uniquePartners = Array.from(
-            new Set(
-              (data as Lead[])
-                .map((lead) => lead.partner_id)
-                .filter(
-                  (id): id is string =>
-                    typeof id === "string" && /^[A-Z]+$/.test(id)
-                )
-            )
-          );
-          setPartnerIds(uniquePartners);
-        }
-      } catch (err: any) {
-        console.error("Error fetching partner IDs:", err.message);
-      }
-    };
-
-    fetchPartnerIds();
-  }, []); // Fetch once on mount
-
-  useEffect(() => {
-    if (!affiliateId) return;
-
     const fetchLeads = async () => {
       try {
         setLoading(true);
+
+        // Query leads where partner_id matches the affiliate_id
         const query = client
           .from("leads")
-          .select("hs_lead_status, create_date, partner_id, affiliate_id")
-          .eq("affiliate_id", affiliateId); // Filter leads by affiliateId
+          .select("hs_lead_status, create_date, partner_id") // No affiliate_id here
+          .eq("partner_id", affiliateId); // Matching partner_id with affiliateId
 
         if (partnerId !== "all") {
           // Apply filter only if a specific partner is selected
           query.eq("partner_id", partnerId);
         }
+
         const { data, error } = await query.order("create_date", {
           ascending: true,
         });
@@ -152,7 +123,6 @@ const ReportsPage: React.FC = () => {
         if (error) throw error;
         if (data) {
           setLeads(data as Lead[]);
-          // Removed setting partnerIds here
         }
       } catch (err: any) {
         setError(err.message);
@@ -161,7 +131,9 @@ const ReportsPage: React.FC = () => {
       }
     };
 
-    fetchLeads();
+    if (affiliateId) {
+      fetchLeads();
+    }
   }, [timeRange, partnerId, affiliateId]); // Add affiliateId to dependencies
 
   useEffect(() => {
@@ -230,29 +202,6 @@ const ReportsPage: React.FC = () => {
       {/* Adjust layout to position Select on the right */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Reports Management</h1>
-        <Select
-          value={partnerId}
-          onValueChange={(value: string) => setPartnerId(value)}
-        >
-          <SelectTrigger
-            className="w-[160px] rounded-lg"
-            aria-label="Select Partner"
-          >
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent className="rounded-xl">
-            {/* Add "All" option with a non-empty value */}
-            <SelectItem key="all" value="all" className="rounded-lg">
-              All
-            </SelectItem>
-            {/* Existing Partner Options */}
-            {partnerIds.map((partner) => (
-              <SelectItem key={partner} value={partner} className="rounded-lg">
-                {partner}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Summary Numbers */}

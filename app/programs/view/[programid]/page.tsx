@@ -28,7 +28,6 @@ interface Program {
   created_at: string;
   updated_at: string;
   user_id: string;
-  affiliate_id?: string; // Add affiliate_id to Program interface
 }
 
 export async function generateMetadata(props: PageProps): Promise<Metadata> {
@@ -116,8 +115,22 @@ export default async function ProgramViewPage(props: PageProps) {
     console.error("Error fetching user:", error);
     // Optionally, handle unauthenticated user
   }
-  const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",") || [];
 
+  // Fetch the affiliate information for the logged-in user
+  const { data: affiliateData, error: affiliateError } = await supabase
+    .from("affiliates")
+    .select("affiliate_id")
+    .eq("work_email", data?.user?.email) // Assuming work_email is unique for affiliate identification
+    .single();
+
+  if (affiliateError || !affiliateData) {
+    console.error("Error fetching affiliate data:", affiliateError);
+    // Optionally handle error or missing affiliate
+  }
+
+  const affiliateId = affiliateData?.affiliate_id;
+
+  const adminEmails = process.env.NEXT_PUBLIC_ADMIN_EMAILS?.split(",") || [];
   const isAdmin = data?.user?.email
     ? adminEmails.includes(data.user.email)
     : false;
@@ -156,16 +169,24 @@ export default async function ProgramViewPage(props: PageProps) {
             {program.additional_links.map((link, index) => (
               <div key={index} className="border-b pb-2 mb-2">
                 <p className="font-bold">{link.title}</p>
-                <a
-                  href={link.url}
-                  className="text-blue-500"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {link.url}
-                </a>
+
+                {/* Construct the URL with the affiliate ID */}
+                {affiliateId && (
+                  <a
+                    href={`${link.url}?sourceId=${affiliateId}`}
+                    className="text-blue-500"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {link.url}?sourceId={affiliateId}
+                  </a>
+                )}
+
+                {/* Display description if it exists */}
                 {link.description && (
-                  <p className="text-sm text-gray-600">{link.description}</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {link.description}
+                  </p>
                 )}
               </div>
             ))}
@@ -183,35 +204,8 @@ export default async function ProgramViewPage(props: PageProps) {
             <MediaManager
               mediaFiles={program.media_files}
               programId={program.id}
-              isAdmin={isAdmin} // Ensure isAdmin is passed correctly
+              isAdmin={isAdmin}
             />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Partner Link Section */}
-      {program.affiliate_id && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Partner Link</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center">
-            <input
-              type="text"
-              readOnly
-              value={`https://www.ischoolofai.com/the-genai-master-registration?sourceId=${program.affiliate_id}`}
-              className="flex-1 mr-2 p-2 border rounded"
-            />
-            <button
-              onClick={() =>
-                navigator.clipboard.writeText(
-                  `https://www.ischoolofai.com/the-genai-master-registration?sourceId=${program.affiliate_id}`
-                )
-              }
-              className="px-4 py-2 bg-blue-500 text-white rounded"
-            >
-              Copy
-            </button>
           </CardContent>
         </Card>
       )}

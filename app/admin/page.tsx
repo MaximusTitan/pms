@@ -117,55 +117,86 @@ export default function AdminPage() {
   }, [supabase]);
 
   return (
-    <div className="p-6 bg-white min-h-screen">
-      <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+    <div className="p-6 bg-white dark:bg-neutral-900 min-h-screen">
+      <h1 className="text-3xl font-bold mb-8 text-black dark:text-white">
+        Admin Dashboard
+      </h1>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-lg font-semibold">Total Leads</p>
-          <p className="text-2xl font-bold">
+        <div
+          className="bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow dark:shadow-lg p-4 text-center cursor-pointer"
+          onClick={() => (window.location.href = "/admin/leads")}
+        >
+          <p className="text-lg font-semibold text-gray-800 dark:text-neutral-200">
+            Total Leads
+          </p>
+          <p className="text-2xl font-bold text-black dark:text-white">
             <CountUp end={reportNumbers?.totalLeads || 0} />
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-lg font-semibold">Total Demos</p>
-          <p className="text-2xl font-bold">
+        <div
+          className="bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow dark:shadow-lg p-4 text-center cursor-pointer"
+          onClick={() => (window.location.href = "/admin/reports")}
+        >
+          <p className="text-lg font-semibold text-gray-800 dark:text-neutral-200">
+            Total Demos
+          </p>
+          <p className="text-2xl font-bold text-black dark:text-white">
             <CountUp end={reportNumbers?.totalDemos || 0} />
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-lg font-semibold">Total Sales</p>
-          <p className="text-2xl font-bold">
+        <div
+          className="bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow dark:shadow-lg p-4 text-center cursor-pointer"
+          onClick={() => (window.location.href = "/admin/reports")}
+        >
+          <p className="text-lg font-semibold text-gray-800 dark:text-neutral-200">
+            Total Sales
+          </p>
+          <p className="text-2xl font-bold text-black dark:text-white">
             <CountUp end={reportNumbers?.totalSales || 0} />
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-lg font-semibold">Active Programs</p>
-          <p className="text-2xl font-bold">
+        <div
+          className="bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow dark:shadow-lg p-4 text-center cursor-pointer"
+          onClick={() => (window.location.href = "/admin/programs")}
+        >
+          <p className="text-lg font-semibold text-gray-800 dark:text-neutral-200">
+            Active Programs
+          </p>
+          <p className="text-2xl font-bold text-black dark:text-white">
             <CountUp end={reportNumbers?.activePrograms || 0} />
           </p>
         </div>
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-lg font-semibold">Total Affiliates</p>
-          <p className="text-2xl font-bold">
+        <div
+          className="bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow dark:shadow-lg p-4 text-center cursor-pointer"
+          onClick={() => (window.location.href = "/admin/affiliates")}
+        >
+          <p className="text-lg font-semibold text-gray-800 dark:text-neutral-200">
+            Total Affiliates
+          </p>
+          <p className="text-2xl font-bold text-black dark:text-white">
             <CountUp end={reportNumbers?.pendingAffiliates || 0} />
           </p>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Latest Affiliates */}
-        <div className="p-6 bg-white rounded-lg shadow">
-          <h3 className="text-xl font-semibold mb-4">Latest Affiliates</h3>
+        <div className="p-6 bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow dark:shadow-lg">
+          <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-neutral-100">
+            Latest Affiliates
+          </h3>
           <ul className="mb-4">
             {latestAffiliates
               .filter((a) => a.full_name)
               .map((affiliate) => (
                 <li key={affiliate.id} className="border-b py-2">
-                  <p className="font-medium">{affiliate.full_name}</p>
+                  <p className="font-medium text-gray-900 dark:text-neutral-100">
+                    {affiliate.full_name}
+                  </p>
                   {/* Additional Details */}
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-neutral-400">
                     Email: {affiliate.work_email}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-neutral-400">
                     Status: {affiliate.status}
                   </p>
                 </li>
@@ -173,7 +204,7 @@ export default function AdminPage() {
           </ul>
           <Button
             variant="outline"
-            className="w-full border-gray-300 hover:bg-gray-100"
+            className="w-full border-gray-300 dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-800 dark:text-neutral-200"
             onClick={() => (window.location.href = "/admin/affiliates")}
           >
             View All Affiliates
@@ -181,25 +212,31 @@ export default function AdminPage() {
         </div>
 
         {/* Latest Leads */}
-        <div className="p-6 bg-white rounded-lg shadow">
-          <h3 className="text-xl font-semibold mb-4">Latest Leads</h3>
+        <div className="p-6 bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow dark:shadow-lg">
+          <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-neutral-100">
+            Latest Leads
+          </h3>
           <ul className="mb-4">
             {latestLeads
               .filter((l) => l.first_name)
               .map((lead) => (
                 <li key={lead.id} className="border-b py-2">
-                  <p className="font-medium">
+                  <p className="font-medium text-gray-900 dark:text-neutral-100">
                     {lead.first_name} {lead.last_name}
                   </p>
                   {/* Additional Details */}
-                  <p className="text-sm text-gray-600">Email: {lead.email}</p>
-                  <p className="text-sm text-gray-600">Phone: {lead.phone}</p>
+                  <p className="text-sm text-gray-600 dark:text-neutral-400">
+                    Email: {lead.email}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-neutral-400">
+                    Phone: {lead.phone}
+                  </p>
                 </li>
               ))}
           </ul>
           <Button
             variant="outline"
-            className="w-full border-gray-300 hover:bg-gray-100"
+            className="w-full border-gray-300 dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-800 dark:text-neutral-200"
             onClick={() => (window.location.href = "/admin/leads")}
           >
             View All Leads
@@ -207,18 +244,22 @@ export default function AdminPage() {
         </div>
 
         {/* Latest Programs */}
-        <div className="p-6 bg-white rounded-lg shadow">
-          <h3 className="text-xl font-semibold mb-4">Latest Programs</h3>
+        <div className="p-6 bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow dark:shadow-lg">
+          <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-neutral-100">
+            Latest Programs
+          </h3>
           <ul className="mb-4">
             {latestPrograms.map((program) => (
               <li key={program.id} className="border-b py-2">
-                <p className="font-medium">{program.name}</p>
+                <p className="font-medium text-gray-900 dark:text-neutral-100">
+                  {program.name}
+                </p>
                 {/* Additional Details */}
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-neutral-400">
                   Created At:{" "}
                   {new Date(program.created_at).toLocaleDateString()}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-neutral-400">
                   Status: {program.status}
                 </p>
               </li>
@@ -226,7 +267,7 @@ export default function AdminPage() {
           </ul>
           <Button
             variant="outline"
-            className="w-full border-gray-300 hover:bg-gray-100"
+            className="w-full border-gray-300 dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-800 dark:text-neutral-200"
             onClick={() => (window.location.href = "/admin/programs")}
           >
             View All Programs
@@ -235,33 +276,35 @@ export default function AdminPage() {
 
         {/* Reports Summary */}
         {reportNumbers && (
-          <div className="p-6 bg-white rounded-lg shadow">
-            <h3 className="text-xl font-semibold mb-4">Reports Summary</h3>
+          <div className="p-6 bg-neutral-50 dark:bg-neutral-800 rounded-lg shadow dark:shadow-lg">
+            <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-neutral-100">
+              Reports Summary
+            </h3>
             <div className="space-y-2">
-              <p>
+              <p className="text-gray-900 dark:text-neutral-100">
                 <span className="font-semibold">Total Leads:</span>{" "}
                 {reportNumbers.totalLeads}
               </p>
-              <p>
+              <p className="text-gray-900 dark:text-neutral-100">
                 <span className="font-semibold">Total Demos:</span>{" "}
                 {reportNumbers.totalDemos}
               </p>
-              <p>
+              <p className="text-gray-900 dark:text-neutral-100">
                 <span className="font-semibold">Total Sales:</span>{" "}
                 {reportNumbers.totalSales}
               </p>
-              <p>
+              <p className="text-gray-900 dark:text-neutral-100">
                 <span className="font-semibold">Active Programs:</span>{" "}
                 {reportNumbers.activePrograms}
               </p>
-              <p>
+              <p className="text-gray-900 dark:text-neutral-100">
                 <span className="font-semibold">Total Affiliates:</span>{" "}
                 {reportNumbers.pendingAffiliates}
               </p>
             </div>
             <Button
               variant="outline"
-              className="w-full border-gray-300 hover:bg-gray-100 mt-4"
+              className="w-full border-gray-300 dark:border-neutral-700 hover:bg-gray-100 dark:hover:bg-neutral-700 text-gray-800 dark:text-neutral-200 mt-4"
               onClick={() => (window.location.href = "/admin/reports")}
             >
               View Detailed Reports
