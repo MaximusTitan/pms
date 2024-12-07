@@ -248,7 +248,7 @@ const DashboardPage: React.FC = () => {
   return (
     <div className="p-6 bg-white dark:bg-neutral-900 min-h-screen">
       <h1 className="text-3xl font-bold mb-8 text-black dark:text-white">
-        Admin Dashboard
+        Partner Dashboard
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div
