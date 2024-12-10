@@ -27,6 +27,19 @@ export const signUpAction = async (formData: FormData) => {
     console.error(error.code + " " + error.message);
     return encodedRedirect("error", "/sign-up", error.message);
   } else {
+    // Insert user's email into 'affiliates' table
+    const { error: insertError } = await supabase
+      .from('affiliates')
+      .insert({
+        status: 'enabled',
+        full_name: '',
+        work_email: email,
+        affiliate_id: '',
+      });
+
+    if (insertError) {
+      console.error('Failed to insert into affiliates:', insertError);
+    }
     return encodedRedirect(
       "success",
       "/sign-up",

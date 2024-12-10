@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 const OnboardingPage: React.FC = () => {
   const [affiliateId, setAffiliateId] = useState("");
+  const [fullName, setFullName] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const router = useRouter();
@@ -41,14 +42,17 @@ const OnboardingPage: React.FC = () => {
         return;
       }
 
-      // Update the affiliate ID for the current user
-      const { error: insertError } = await client
+      // Update the affiliate information for the current user
+      const { error: updateError } = await client
         .from("affiliates")
-        .update({ affiliate_id: formattedId })
+        .update({
+          affiliate_id: formattedId,
+          full_name: fullName,
+        })
         .eq("work_email", userEmail);
 
-      if (insertError) {
-        setError("Failed to create Affiliate ID. Please try again.");
+      if (updateError) {
+        setError("Failed to update affiliate information. Please try again.");
       } else {
         setSuccess("Affiliate ID created successfully!");
         window.location.href = "/dashboard";
@@ -71,6 +75,16 @@ const OnboardingPage: React.FC = () => {
               type="text"
               value={affiliateId}
               onChange={(e) => setAffiliateId(e.target.value)}
+              required
+              className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-rose-500 focus:border-rose-500"
+            />
+          </label>
+          <label className="block">
+            <span className="text-gray-700">Full Name:</span>
+            <input
+              type="text"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               required
               className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-rose-500 focus:border-rose-500"
             />
