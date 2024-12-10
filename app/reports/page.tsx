@@ -3,15 +3,13 @@
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import {
-  Area,
-  AreaChart,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Bar,
-  BarChart,
+  Line,
+  LineChart,
 } from "recharts";
 import {
   Card,
@@ -19,12 +17,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import {
@@ -36,6 +33,7 @@ import {
 } from "@/components/ui/select";
 import CountUp from "react-countup"; // Add import for CountUp
 import { useRouter } from "next/navigation"; // Add import for useRouter
+import { TrendingUp } from "lucide-react";
 
 interface Lead {
   id: number;
@@ -270,33 +268,13 @@ const ReportsPage: React.FC = () => {
               className="aspect-auto h-[400px] w-full"
             >
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="fillDemo" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor="hsl(var(--chart-1))"
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="hsl(var(--chart-1))"
-                        stopOpacity={0.1}
-                      />
-                    </linearGradient>
-                    <linearGradient id="fillSale" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor="hsl(var(--chart-2))"
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="hsl(var(--chart-2))"
-                        stopOpacity={0.1}
-                      />
-                    </linearGradient>
-                  </defs>
+                <LineChart
+                  data={chartData}
+                  margin={{
+                    left: 12,
+                    right: 12,
+                  }}
+                >
                   <CartesianGrid vertical={false} />
                   <XAxis
                     dataKey="date"
@@ -312,89 +290,38 @@ const ReportsPage: React.FC = () => {
                     }}
                   />
                   <YAxis allowDecimals={false} />
-                  <Tooltip
-                    content={
-                      <ChartTooltipContent
-                        labelFormatter={(value) =>
-                          new Date(value).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })
-                        }
-                        indicator="dot"
-                      />
-                    }
-                  />
-                  <Area
-                    key="Demo"
+                  <Tooltip content={<ChartTooltipContent />} />
+                  <Line
                     dataKey="Demo"
                     type="monotone"
-                    fill="url(#fillDemo)"
                     stroke={chartConfig.Demo.color}
+                    strokeWidth={2}
+                    dot={false}
                   />
-                  <Area
-                    key="Sale"
+                  <Line
                     dataKey="Sale"
                     type="monotone"
-                    fill="url(#fillSale)"
                     stroke={chartConfig.Sale.color}
+                    strokeWidth={2}
+                    dot={false}
                   />
-                  <ChartLegend content={<ChartLegendContent />} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-            {/* New BarChart Container */}
-            <ChartContainer
-              config={chartConfig}
-              className="aspect-auto h-[400px] w-full mt-8" // Added margin-top for spacing
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => {
-                      const date = new Date(value);
-                      return date.toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      });
-                    }}
-                  />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip
-                    content={
-                      <ChartTooltipContent
-                        labelFormatter={(value) =>
-                          new Date(value).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })
-                        }
-                        indicator="line" // Changed from "bar" to "line"
-                      />
-                    }
-                  />
-                  <Bar
-                    dataKey="Demo"
-                    fill={chartConfig.Demo.color}
-                    name="Demo"
-                  />
-                  <Bar
-                    dataKey="Sale"
-                    fill={chartConfig.Sale.color}
-                    name="Sale"
-                  />
-                  <ChartLegend content={<ChartLegendContent />} />
-                </BarChart>
+                </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
+          <CardFooter>
+            <div className="flex w-full items-start gap-2 text-sm">
+              <div className="grid gap-2">
+                <div className="flex items-center gap-2 font-medium leading-none">
+                  Trending up by 5.2% this month{" "}
+                  <TrendingUp className="h-4 w-4" />
+                </div>
+                <div className="flex items-center gap-2 leading-none text-muted-foreground">
+                  Showing total leads for the selected time range
+                </div>
+              </div>
+            </div>
+          </CardFooter>
         </Card>
       </div>
     </div>
