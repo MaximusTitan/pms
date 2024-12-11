@@ -3,14 +3,21 @@
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { Button } from "@/components/ui/button";
+import { CheckCircle, XCircle, ChevronsUpDown, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
-import { CheckCircle, XCircle } from "lucide-react";
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
 
 interface Affiliate {
   id: number;
@@ -30,6 +37,7 @@ const AffiliateAssignmentForm: React.FC<AffiliateAssignmentFormProps> = ({
   const [selectedAffiliate, setSelectedAffiliate] = useState<number | null>(
     null
   );
+  const [open, setOpen] = useState(false);
   const [assignedAffiliate, setAssignedAffiliate] = useState<Affiliate | null>(
     null
   );
@@ -57,18 +65,53 @@ const AffiliateAssignmentForm: React.FC<AffiliateAssignmentFormProps> = ({
 
   return (
     <div className="space-y-4">
-      <Select onValueChange={(value) => setSelectedAffiliate(Number(value))}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Select an Affiliate" />
-        </SelectTrigger>
-        <SelectContent>
-          {affiliates.map((affiliate) => (
-            <SelectItem key={affiliate.id} value={affiliate.id.toString()}>
-              {affiliate.full_name} - {affiliate.work_email}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            className="w-full justify-between"
+          >
+            {selectedAffiliate
+              ? affiliates.find(
+                  (affiliate) => affiliate.id === selectedAffiliate
+                )?.full_name
+              : "Select an Affiliate"}
+            <ChevronsUpDown className="opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-full p-0">
+          <Command>
+            <CommandInput placeholder="Search affiliate..." />
+            <CommandList>
+              <CommandEmpty>No affiliate found.</CommandEmpty>
+              <CommandGroup>
+                {affiliates.map((affiliate) => (
+                  <CommandItem
+                    key={affiliate.id}
+                    value={`${affiliate.full_name} - ${affiliate.work_email}`}
+                    onSelect={() => {
+                      setSelectedAffiliate(affiliate.id);
+                      setOpen(false);
+                    }}
+                  >
+                    {affiliate.full_name} - {affiliate.work_email}
+                    <Check
+                      className={cn(
+                        "ml-auto",
+                        selectedAffiliate === affiliate.id
+                          ? "opacity-100"
+                          : "opacity-0"
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
 
       <Button
         onClick={handleAffiliateAssignment}

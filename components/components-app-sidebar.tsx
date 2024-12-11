@@ -36,6 +36,11 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  LayoutDashboardIcon,
+  HandshakeIcon,
+  UsersIcon,
+  NewspaperIcon,
+  BookTextIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { ThemeSwitcher } from "./theme-switcher";
@@ -43,23 +48,28 @@ import { signOutAction } from "@/app/actions";
 import { useRouter } from "next/navigation";
 
 const adminNavData = [
-  { title: "Dashboard", url: "/admin", icon: SquareTerminal, isActive: true },
-  { title: "Affiliate", url: "/admin/affiliates", icon: Bot },
-  { title: "Programs", url: "/admin/programs", icon: BookOpen },
-  { title: "Reports", url: "/admin/reports", icon: Settings2 },
-  { title: "Leads", url: "/admin/leads", icon: Bot },
+  {
+    title: "Dashboard",
+    url: "/admin",
+    icon: LayoutDashboardIcon,
+    isActive: true,
+  },
+  { title: "Affiliate", url: "/admin/affiliates", icon: HandshakeIcon },
+  { title: "Programs", url: "/admin/programs", icon: BookTextIcon },
+  { title: "Reports", url: "/admin/reports", icon: NewspaperIcon },
+  { title: "Leads", url: "/admin/leads", icon: UsersIcon },
 ];
 
 const partnerNavData = [
   {
     title: "Dashboard",
     url: "/dashboard",
-    icon: SquareTerminal,
+    icon: LayoutDashboardIcon,
     isActive: true,
   },
-  { title: "Programs", url: "/programs", icon: BookOpen },
-  { title: "Leads", url: "/leads", icon: Bot },
-  { title: "Reports", url: "/reports", icon: Settings2 },
+  { title: "Programs", url: "/programs", icon: BookTextIcon },
+  { title: "Reports", url: "/reports", icon: NewspaperIcon },
+  { title: "Leads", url: "/leads", icon: UsersIcon },
 ];
 
 const getAdminEmails = () => {
@@ -134,6 +144,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
+      <SidebarTrigger className="ml-2" />
       {/* User Avatar and Dropdown Menu in Sidebar Footer */}
       <SidebarFooter>
         <SidebarMenu>

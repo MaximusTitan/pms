@@ -3,28 +3,18 @@
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import {
-  Area,
-  AreaChart,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  Bar,
-  BarChart,
+  Line,
+  LineChart,
 } from "recharts";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ChartConfig,
   ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartTooltipContent,
 } from "@/components/ui/chart";
 import {
@@ -34,19 +24,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import CountUp from "react-countup"; // Add import for CountUp
 
 interface Lead {
   id: number;
   hs_lead_status: string | null;
   create_date: string | null;
-  partner_id: string | null; // Added partner_id field
-  // ...other fields...
+  partner_id: string | null;
 }
 
 const client = createClient();
 
 const chartConfig: ChartConfig = {
+  Lead: {
+    label: "Lead",
+    color: "hsl(var(--chart-3))",
+  },
   Demo: {
     label: "Demo",
     color: "hsl(var(--chart-1))",
@@ -59,6 +51,7 @@ const chartConfig: ChartConfig = {
 
 interface ChartDataPoint {
   date: string;
+  Lead: number;
   Demo: number;
   Sale: number;
 }
@@ -68,9 +61,9 @@ const ReportsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
-  const [timeRange, setTimeRange] = useState<"30d" | "90d" | "180d">("90d"); // Existing state
-  const [partnerId, setPartnerId] = useState<string>("all"); // Initialize partnerId to "all" to represent selecting all partners
-  const [partnerIds, setPartnerIds] = useState<string[]>([]); // Ensures partnerIds is an array of strings
+  const [timeRange, setTimeRange] = useState<"30d" | "90d" | "180d">("90d");
+  const [partnerId, setPartnerId] = useState<string>("all");
+  const [partnerIds, setPartnerIds] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchPartnerIds = async () => {
@@ -81,6 +74,7 @@ const ReportsPage: React.FC = () => {
           .neq("partner_id", null);
 
         if (error) throw error;
+
         if (data) {
           const uniquePartners = Array.from(
             new Set(
@@ -100,7 +94,7 @@ const ReportsPage: React.FC = () => {
     };
 
     fetchPartnerIds();
-  }, []); // Fetch once on mount
+  }, []);
 
   useEffect(() => {
     const fetchLeads = async () => {
@@ -108,19 +102,18 @@ const ReportsPage: React.FC = () => {
         setLoading(true);
         const query = client
           .from("leads")
-          .select("hs_lead_status, create_date, partner_id");
+          .select("hs_lead_status, create_date, partner_id")
+          .order("create_date", { ascending: true });
+
         if (partnerId !== "all") {
-          // Apply filter only if a specific partner is selected
           query.eq("partner_id", partnerId);
         }
-        const { data, error } = await query.order("create_date", {
-          ascending: true,
-        });
+
+        const { data, error } = await query;
 
         if (error) throw error;
         if (data) {
           setLeads(data as Lead[]);
-          // Removed setting partnerIds here
         }
       } catch (err: any) {
         setError(err.message);
@@ -130,11 +123,10 @@ const ReportsPage: React.FC = () => {
     };
 
     fetchLeads();
-  }, [timeRange, partnerId]); // Added partnerId to dependencies
+  }, [timeRange, partnerId]);
 
   useEffect(() => {
     const categorizeLeads = () => {
-      // Define the date range based on timeRange
       const endDate = new Date();
       let startDate = new Date();
       if (timeRange === "30d") {
@@ -145,24 +137,26 @@ const ReportsPage: React.FC = () => {
         startDate.setDate(endDate.getDate() - 90);
       }
 
-      // Filter leads within the date range
       const filteredLeads = leads.filter((lead) => {
         if (!lead.create_date) return false;
         const leadDate = new Date(lead.create_date);
         return leadDate >= startDate && leadDate <= endDate;
       });
 
-      // Aggregate leads by date
-      const aggregation: { [key: string]: { Demo: number; Sale: number } } = {};
+      const aggregation: {
+        [key: string]: { Lead: number; Demo: number; Sale: number };
+      } = {};
 
       filteredLeads.forEach((lead) => {
         if (!lead.create_date) return;
         const date = new Date(lead.create_date);
-        const dateKey = date.toISOString().split("T")[0]; // YYYY-MM-DD
+        const dateKey = date.toISOString().split("T")[0];
 
         if (!aggregation[dateKey]) {
-          aggregation[dateKey] = { Demo: 0, Sale: 0 };
+          aggregation[dateKey] = { Lead: 0, Demo: 0, Sale: 0 };
         }
+
+        aggregation[dateKey].Lead += 1;
 
         if (lead.hs_lead_status === "Orientation scheduled") {
           aggregation[dateKey].Demo += 1;
@@ -171,10 +165,10 @@ const ReportsPage: React.FC = () => {
         }
       });
 
-      // Convert aggregation to chartData array
       const chartDataArray: ChartDataPoint[] = Object.keys(aggregation).map(
         (date) => ({
           date,
+          Lead: aggregation[date].Lead,
           Demo: aggregation[date].Demo,
           Sale: aggregation[date].Sale,
         })
@@ -186,8 +180,10 @@ const ReportsPage: React.FC = () => {
     categorizeLeads();
   }, [leads, timeRange]);
 
-  const totalDemos = chartData.reduce((sum, data) => sum + data.Demo, 0);
-  const totalSales = chartData.reduce((sum, data) => sum + data.Sale, 0);
+  // Calculate totals
+  const totalLead = chartData.reduce((sum, data) => sum + data.Lead, 0);
+  const totalDemo = chartData.reduce((sum, data) => sum + data.Demo, 0);
+  const totalSale = chartData.reduce((sum, data) => sum + data.Sale, 0);
 
   if (loading) return <p className="p-4 text-center">Loading reports...</p>;
   if (error)
@@ -195,80 +191,50 @@ const ReportsPage: React.FC = () => {
 
   return (
     <div className="p-4">
-      {/* Adjust layout to position Select on the right */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Reports Management</h1>
-        <Select
-          value={partnerId}
-          onValueChange={(value: string) => setPartnerId(value)}
-        >
-          <SelectTrigger
-            className="w-[160px] rounded-lg"
-            aria-label="Select Partner"
-          >
-            <SelectValue placeholder="All" />
-          </SelectTrigger>
-          <SelectContent className="rounded-xl">
-            {/* Add "All" option with a non-empty value */}
-            <SelectItem key="all" value="all" className="rounded-lg">
-              All
-            </SelectItem>
-            {/* Existing Partner Options */}
-            {partnerIds.map((partner) => (
-              <SelectItem key={partner} value={partner} className="rounded-lg">
-                {partner}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Summary Numbers */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-lg font-semibold">Total Leads</p>
-          <p className="text-2xl font-bold">
-            <CountUp start={0} end={leads.length} duration={2} />
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-lg font-semibold">Total Demos</p>
-          <p className="text-2xl font-bold">
-            <CountUp start={0} end={totalDemos} duration={2} />
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-lg font-semibold">Total Sales</p>
-          <p className="text-2xl font-bold">
-            <CountUp start={0} end={totalSales} duration={2} />
-          </p>
-        </div>
-      </div>
-
-      {/* Existing Charts */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <Card>
-          <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
-            <div className="grid flex-1 gap-1 text-center sm:text-left">
-              <CardTitle>Lead Status Chart</CardTitle>
-              <CardDescription>
-                Showing Demo and Sale leads over time
-              </CardDescription>
-            </div>
-            {/* Removed Partner Select from here */}
+        <div className="flex gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Partner ID</label>
+            <Select
+              value={partnerId}
+              onValueChange={(value: string) => setPartnerId(value)}
+            >
+              <SelectTrigger
+                className="w-[160px] rounded-lg"
+                aria-label="Select Partner"
+              >
+                <SelectValue placeholder="Select Partner" />
+              </SelectTrigger>
+              <SelectContent className="rounded-xl">
+                <SelectItem value="all" className="rounded-lg">
+                  All
+                </SelectItem>
+                {partnerIds.map((partner) => (
+                  <SelectItem
+                    key={partner}
+                    value={partner}
+                    className="rounded-lg"
+                  >
+                    {partner}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Time Range</label>
             <Select
               value={timeRange}
-              onValueChange={(value: string) => {
-                if (value === "30d" || value === "90d" || value === "180d") {
-                  setTimeRange(value);
-                }
+              onValueChange={(value: "30d" | "90d" | "180d") => {
+                setTimeRange(value);
               }}
             >
               <SelectTrigger
-                className="w-[160px] rounded-lg sm:ml-auto"
+                className="w-[160px] rounded-lg"
                 aria-label="Select Time Range"
               >
-                <SelectValue placeholder="Last 90 days" />
+                <SelectValue placeholder="Select range" />
               </SelectTrigger>
               <SelectContent className="rounded-xl">
                 <SelectItem value="30d" className="rounded-lg">
@@ -282,40 +248,26 @@ const ReportsPage: React.FC = () => {
                 </SelectItem>
               </SelectContent>
             </Select>
+          </div>
+        </div>
+      </div>
+      <div className="flex justify-around mb-4 text-sm text-gray-600">
+        <div>Total Lead: {totalLead}</div>
+        <div>Total Demo: {totalDemo}</div>
+        <div>Total Sale: {totalSale}</div>
+      </div>
+      <div className="bg-white rounded-lg shadow p-6">
+        <Card>
+          <CardHeader className="border-b pb-4">
+            <CardTitle>Lead Status Chart</CardTitle>
           </CardHeader>
-          <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+          <CardContent className="pt-6">
             <ChartContainer
               config={chartConfig}
               className="aspect-auto h-[400px] w-full"
             >
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
-                  <defs>
-                    <linearGradient id="fillDemo" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor="hsl(var(--chart-1))"
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="hsl(var(--chart-1))"
-                        stopOpacity={0.1}
-                      />
-                    </linearGradient>
-                    <linearGradient id="fillSale" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor="hsl(var(--chart-2))"
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="hsl(var(--chart-2))"
-                        stopOpacity={0.1}
-                      />
-                    </linearGradient>
-                  </defs>
+                <LineChart data={chartData}>
                   <CartesianGrid vertical={false} />
                   <XAxis
                     dataKey="date"
@@ -331,86 +283,29 @@ const ReportsPage: React.FC = () => {
                     }}
                   />
                   <YAxis allowDecimals={false} />
-                  <Tooltip
-                    content={
-                      <ChartTooltipContent
-                        labelFormatter={(value) =>
-                          new Date(value).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })
-                        }
-                        indicator="dot"
-                      />
-                    }
+                  <Tooltip content={<ChartTooltipContent />} />
+                  <Line
+                    dataKey="Lead"
+                    type="monotone"
+                    stroke={chartConfig.Lead.color}
+                    strokeWidth={2}
+                    dot={false}
                   />
-                  <Area
-                    key="Demo"
+                  <Line
                     dataKey="Demo"
                     type="monotone"
-                    fill="url(#fillDemo)"
                     stroke={chartConfig.Demo.color}
+                    strokeWidth={2}
+                    dot={false}
                   />
-                  <Area
-                    key="Sale"
+                  <Line
                     dataKey="Sale"
                     type="monotone"
-                    fill="url(#fillSale)"
                     stroke={chartConfig.Sale.color}
+                    strokeWidth={2}
+                    dot={false}
                   />
-                  <ChartLegend content={<ChartLegendContent />} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-            {/* New BarChart Container */}
-            <ChartContainer
-              config={chartConfig}
-              className="aspect-auto h-[400px] w-full mt-8" // Added margin-top for spacing
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => {
-                      const date = new Date(value);
-                      return date.toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      });
-                    }}
-                  />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip
-                    content={
-                      <ChartTooltipContent
-                        labelFormatter={(value) =>
-                          new Date(value).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })
-                        }
-                        indicator="line" // Changed from "bar" to "line"
-                      />
-                    }
-                  />
-                  <Bar
-                    dataKey="Demo"
-                    fill={chartConfig.Demo.color}
-                    name="Demo"
-                  />
-                  <Bar
-                    dataKey="Sale"
-                    fill={chartConfig.Sale.color}
-                    name="Sale"
-                  />
-                  <ChartLegend content={<ChartLegendContent />} />
-                </BarChart>
+                </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
           </CardContent>

@@ -260,8 +260,8 @@ export default function AdminPage() {
 
   return (
     <div className="p-6 bg-neutral-50 min-h-screen">
-      <h1 className="text-3xl font-bold mb-8 text-black dark:text-white">
-        Admin Dashboard
+      <h1 className="text-2xl font-semibold mb-8 text-black dark:text-white">
+        Welcome Back Admin🫡
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
         <div
@@ -316,34 +316,39 @@ export default function AdminPage() {
       {/* Add Chart */}
       <div className="bg-white rounded-lg shadow p-6 mb-8">
         <Card>
-          <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
-            <div className="grid flex-1 gap-1 text-center sm:text-left">
+          <CardHeader className="border-b pb-4">
+            <div className="flex justify-between items-center">
               <CardTitle>Lead Status Chart</CardTitle>
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Time Range
+                </label>
+                <Select
+                  value={timeRange}
+                  onValueChange={(value: "30d" | "90d" | "180d") => {
+                    setTimeRange(value);
+                  }}
+                >
+                  <SelectTrigger
+                    className="w-[160px] rounded-lg"
+                    aria-label="Select Time Range"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="30d" className="rounded-lg">
+                      Last 30 days
+                    </SelectItem>
+                    <SelectItem value="90d" className="rounded-lg">
+                      Last 90 days
+                    </SelectItem>
+                    <SelectItem value="180d" className="rounded-lg">
+                      Last 180 days
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <Select
-              value={timeRange}
-              onValueChange={(value: "30d" | "90d" | "180d") => {
-                setTimeRange(value);
-              }}
-            >
-              <SelectTrigger
-                className="w-[160px] rounded-lg sm:ml-auto"
-                aria-label="Select Time Range"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="30d" className="rounded-lg">
-                  Last 30 days
-                </SelectItem>
-                <SelectItem value="90d" className="rounded-lg">
-                  Last 90 days
-                </SelectItem>
-                <SelectItem value="180d" className="rounded-lg">
-                  Last 180 days
-                </SelectItem>
-              </SelectContent>
-            </Select>
           </CardHeader>
           <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
             <ChartContainer

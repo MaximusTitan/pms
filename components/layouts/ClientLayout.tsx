@@ -33,7 +33,7 @@ export default function ClientLayout({
       >
         {showSidebar && <AppSidebar />}
         <main className="flex-1 flex flex-col">
-          {showSidebar && <AppSidebarHeader />}
+          {/* {showSidebar && <AppSidebarHeader />} */}
           <div className="p-4">{children}</div>
         </main>
       </ThemeProvider>
