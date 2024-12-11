@@ -533,7 +533,7 @@ const DashboardPage: React.FC = () => {
             </ChartContainer>
           </CardContent>
           <CardFooter>
-            <div className="flex w-full items-start gap-2 text-sm">
+            {/* <div className="flex w-full items-start gap-2 text-sm">
               <div className="grid gap-2">
                 <div className="flex items-center gap-2 font-medium leading-none">
                   Trending up by 5.2% this month{" "}
@@ -543,7 +543,7 @@ const DashboardPage: React.FC = () => {
                   Showing total leads for the selected time range
                 </div>
               </div>
-            </div>
+            </div> */}
           </CardFooter>
         </Card>
       </div>
