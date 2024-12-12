@@ -212,7 +212,7 @@ const LeadsPage: React.FC = () => {
     <div className="container mx-auto px-4 py-6 space-y-4">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4">
         <h1 className="text-2xl font-bold tracking-tight">Leads</h1>
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col md:flex-row items-center space-x-0 md:space-x-4 space-y-2 md:space-y-0">
           <Input
             placeholder="Search leads..."
             value={search}
@@ -223,7 +223,10 @@ const LeadsPage: React.FC = () => {
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline">
+              <Button
+                variant="outline"
+                className="text-rose-500 border-rose-500 hover:bg-rose-500/10"
+              >
                 Columns <MoreHorizontal className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -253,14 +256,14 @@ const LeadsPage: React.FC = () => {
       </div>
 
       <div className="overflow-x-auto rounded-md border">
-        <Table>
+        <Table className="min-w-full">
           <TableHeader>
             <TableRow>
               {selectedColumns.map((field) => (
                 <TableHead
                   key={field}
                   onClick={() => handleSort(field)}
-                  className="cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="cursor-pointer hover:bg-rose-500/10 transition-colors"
                 >
                   {field === "create_date"
                     ? "Date"
@@ -348,6 +351,7 @@ const LeadsPage: React.FC = () => {
                       e.preventDefault();
                       setCurrentPage(pageNum);
                     }}
+                    className={currentPage === pageNum ? "text-rose-500" : ""}
                   >
                     {pageNum}
                   </PaginationLink>

@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import CountUp from "react-countup"; // Add import for CountUp
-import { useRouter } from "next/navigation"; // Add import for useRouter
+import Link from "next/link"; // Add import for Link
 import { TrendingUp } from "lucide-react";
 
 interface Lead {
@@ -208,139 +208,157 @@ const ReportsPage: React.FC = () => {
   return (
     <div className="p-4">
       {/* Adjust layout to position Select on the right */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Reports Management</h1>
+        <Select
+          value={timeRange}
+          onValueChange={(value: string) => {
+            if (value === "30d" || value === "90d" || value === "180d") {
+              setTimeRange(value);
+            }
+          }}
+        >
+          <SelectTrigger
+            className="w-full sm:w-[160px] rounded-lg"
+            aria-label="Select Time Range"
+          >
+            <SelectValue placeholder="Last 90 days" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl">
+            <SelectItem value="30d" className="rounded-lg">
+              Last 30 days
+            </SelectItem>
+            <SelectItem value="90d" className="rounded-lg">
+              Last 90 days
+            </SelectItem>
+            <SelectItem value="180d" className="rounded-lg">
+              Last 180 days
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Summary Numbers */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-lg font-semibold">Total Leads</p>
-          <p className="text-2xl font-bold">
-            <CountUp start={0} end={leads.length} duration={2} />
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-lg font-semibold">Total Demos</p>
-          <p className="text-2xl font-bold">
-            <CountUp start={0} end={totalDemos} duration={2} />
-          </p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-4 text-center">
-          <p className="text-lg font-semibold">Total Sales</p>
-          <p className="text-2xl font-bold">
-            <CountUp start={0} end={totalSales} duration={2} />
-          </p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        <Card
+          key="Total Leads"
+          className="w-full cursor-pointer hover:shadow-lg transition-shadow"
+        >
+          <CardContent className="p-4 sm:p-6 text-left">
+            <p className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-rose-300 via-rose-500 to-rose-700 font-sans">
+              <CountUp end={leads.length} duration={1} />
+            </p>
+            <p className="text-md sm:text-lg font-medium text-gray-600 dark:text-neutral-400 mt-2">
+              Total Leads
+            </p>
+          </CardContent>
+        </Card>
+        <Card
+          key="Total Demos"
+          className="w-full cursor-pointer hover:shadow-lg transition-shadow"
+        >
+          <CardContent className="p-4 sm:p-6 text-left">
+            <p className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-rose-300 via-rose-500 to-rose-700 font-sans">
+              <CountUp end={totalDemos} duration={1} />
+            </p>
+            <p className="text-md sm:text-lg font-medium text-gray-600 dark:text-neutral-400 mt-2">
+              Total Demos
+            </p>
+          </CardContent>
+        </Card>
+        <Card
+          key="Total Sales"
+          className="w-full cursor-pointer hover:shadow-lg transition-shadow"
+        >
+          <CardContent className="p-4 sm:p-6 text-left">
+            <p className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-rose-300 via-rose-500 to-rose-700 font-sans">
+              <CountUp end={totalSales} duration={1} />
+            </p>
+            <p className="text-md sm:text-lg font-medium text-gray-600 dark:text-neutral-400 mt-2">
+              Total Sales
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Existing Charts */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <Card>
-          <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
-            <div className="grid flex-1 gap-1 text-center sm:text-left">
-              <CardTitle>Lead Status Chart</CardTitle>
-              <CardDescription>
-                Showing Demo and Sale leads over time
-              </CardDescription>
-            </div>
-            {/* Removed Partner Select from here */}
-            <Select
-              value={timeRange}
-              onValueChange={(value: string) => {
-                if (value === "30d" || value === "90d" || value === "180d") {
-                  setTimeRange(value);
-                }
-              }}
-            >
-              <SelectTrigger
-                className="w-[160px] rounded-lg sm:ml-auto"
-                aria-label="Select Time Range"
+      <Card>
+        <CardHeader className="flex flex-col sm:flex-row items-center gap-2 space-y-2 sm:space-y-0 sm:justify-between border-b py-5">
+          <div className="grid flex-1 gap-1 text-center sm:text-left">
+            <CardTitle>Lead Status Chart</CardTitle>
+            <CardDescription>
+              Showing Demo and Sale leads over time
+            </CardDescription>
+          </div>
+          <Select
+            value={timeRange}
+            onValueChange={(value: string) => {
+              if (value === "30d" || value === "90d" || value === "180d") {
+                setTimeRange(value);
+              }
+            }}
+          >
+            {/* ...existing Select code... */}
+          </Select>
+        </CardHeader>
+        <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+          <ChartContainer
+            config={chartConfig}
+            className="aspect-auto h-[300px] sm:h-[400px] w-full"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={chartData}
+                margin={{
+                  left: 12,
+                  right: 12,
+                }}
               >
-                <SelectValue placeholder="Last 90 days" />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="30d" className="rounded-lg">
-                  Last 30 days
-                </SelectItem>
-                <SelectItem value="90d" className="rounded-lg">
-                  Last 90 days
-                </SelectItem>
-                <SelectItem value="180d" className="rounded-lg">
-                  Last 180 days
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </CardHeader>
-          <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-            <ChartContainer
-              config={chartConfig}
-              className="aspect-auto h-[400px] w-full"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={chartData}
-                  margin={{
-                    left: 12,
-                    right: 12,
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickFormatter={(value) => {
+                    const date = new Date(value);
+                    return date.toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    });
                   }}
-                >
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => {
-                      const date = new Date(value);
-                      return date.toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      });
-                    }}
-                  />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip content={<ChartTooltipContent />} />
-                  <Line
-                    dataKey="Lead"
-                    type="monotone"
-                    stroke={chartConfig.Lead.color}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    dataKey="Demo"
-                    type="monotone"
-                    stroke={chartConfig.Demo.color}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    dataKey="Sale"
-                    type="monotone"
-                    stroke={chartConfig.Sale.color}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-          <CardFooter>
-            {/* <div className="flex w-full items-start gap-2 text-sm">
-              <div className="grid gap-2">
-                <div className="flex items-center gap-2 font-medium leading-none">
-                  Trending up by 5.2% this month{" "}
-                  <TrendingUp className="h-4 w-4" />
-                </div>
-                <div className="flex items-center gap-2 leading-none text-muted-foreground">
-                  Showing total leads for the selected time range
-                </div>
-              </div>
-            </div> */}
-          </CardFooter>
-        </Card>
-      </div>
+                />
+                <YAxis allowDecimals={false} />
+                <Tooltip content={<ChartTooltipContent />} />
+                <Line
+                  dataKey="Lead"
+                  type="monotone"
+                  stroke={chartConfig.Lead.color}
+                  strokeWidth={2}
+                  dot={false}
+                />
+                <Line
+                  dataKey="Demo"
+                  type="monotone"
+                  stroke={chartConfig.Demo.color}
+                  strokeWidth={2}
+                  dot={false}
+                />
+                <Line
+                  dataKey="Sale"
+                  type="monotone"
+                  stroke={chartConfig.Sale.color}
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        </CardContent>
+        <CardFooter>
+          {/* Optional: Adjust or hide footer content for mobile */}
+        </CardFooter>
+      </Card>
     </div>
   );
 };

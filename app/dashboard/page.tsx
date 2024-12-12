@@ -84,15 +84,15 @@ interface ChartDataPoint {
 const chartConfig: ChartConfig = {
   Lead: {
     label: "Lead",
-    color: "hsl(var(--chart-3))", // Choose a color for Leads
+    color: "hsl(120, 50%, 30%)", // Darker Green
   },
   Demo: {
     label: "Demo",
-    color: "hsl(var(--chart-1))",
+    color: "hsl(210, 50%, 30%)", // Darker Blue
   },
   Sale: {
     label: "Sale",
-    color: "hsl(var(--chart-2))",
+    color: "hsl(340, 70%, 50%)", // Reddish Pink
   },
 };
 
@@ -101,6 +101,7 @@ const DashboardPage: React.FC = () => {
   const supabase = createClient();
   const [userEmail, setUserEmail] = useState("");
   const [affiliateId, setAffiliateId] = useState<number | null>(null);
+  const [id, setId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true); // Add a loading state
   const [partnerId, setPartnerId] = useState<string | null>(null);
   const [latestPrograms, setLatestPrograms] = useState<Program[]>([]);
@@ -130,7 +131,7 @@ const DashboardPage: React.FC = () => {
         if (user?.email) {
           const { data: affiliateData } = await client
             .from("affiliates")
-            .select("affiliate_id, full_name")
+            .select("affiliate_id, full_name, id")
             .eq("work_email", user.email)
             .single();
 
@@ -138,6 +139,7 @@ const DashboardPage: React.FC = () => {
             setAffiliateId(affiliateData.affiliate_id);
             setPartnerId(affiliateData.affiliate_id); // Ensure partnerId is set
             setUserName(affiliateData.full_name); // Set the user's full name
+            setId(affiliateData.id);
           }
         }
       } catch (err) {
@@ -163,10 +165,10 @@ const DashboardPage: React.FC = () => {
       const { data: affiliatePrograms, error } = await supabase
         .from("affiliate_programs")
         .select("program_id")
-        .eq("affiliate_id", affiliateId);
+        .eq("affiliate_id", id);
 
       if (error) {
-        console.error("Error fetching program IDs:", error); // Log the error object
+        console.error("Error fetching program IDs:", error.message || error); // Log the error message if available
         return;
       }
 
@@ -254,7 +256,7 @@ const DashboardPage: React.FC = () => {
       fetchCurrentPartnerDetails();
       fetchProgramDetails(); // Add this line to use fetchProgramDetails
     }
-  }, [supabase, partnerId, latestPrograms]); // Added latestPrograms to dependencies
+  }, [supabase, partnerId]); // Removed latestPrograms from dependencies
 
   useEffect(() => {
     async function fetchPrograms() {
@@ -386,6 +388,13 @@ const DashboardPage: React.FC = () => {
     categorizeLeads();
   }, [leads, timeRange]);
 
+  useEffect(() => {
+    setReportNumbers((prev) => ({
+      ...prev,
+      activePrograms: latestPrograms.length,
+    }));
+  }, [latestPrograms]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -400,13 +409,13 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 p-6">
-      <h1 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">
+    <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 p-4 sm:p-6">
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 sm:mb-8 text-rose-500 dark:text-white">
         Welcome {userName}!
       </h1>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {[
           {
             title: "Total Leads",
@@ -431,15 +440,15 @@ const DashboardPage: React.FC = () => {
         ].map((item) => (
           <Card
             key={item.title}
-            className="cursor-pointer hover:shadow-lg transition-shadow"
+            className="w-full cursor-pointer hover:shadow-lg transition-shadow"
             onClick={() => router.push(item.link)}
           >
-            <CardContent className="p-6 text-center">
-              <p className="text-lg font-medium text-gray-600 dark:text-neutral-400">
-                {item.title}
-              </p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">
+            <CardContent className="p-4 sm:p-6 text-left">
+              <p className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-rose-300 via-rose-500 to-rose-700 font-sans">
                 <CountUp end={item.value || 0} duration={1} />
+              </p>
+              <p className="text-md sm:text-lg font-medium text-gray-600 dark:text-neutral-400 mt-2">
+                {item.title}
               </p>
             </CardContent>
           </Card>
@@ -447,12 +456,14 @@ const DashboardPage: React.FC = () => {
       </div>
 
       {/* Add Chart */}
-      <div className="bg-white rounded-lg shadow p-6 mb-8">
+      <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6 sm:mb-8">
         <Card>
-          <CardHeader className="flex items-center gap-2 space-y-0 border-b py-5 sm:flex-row">
-            <div className="grid flex-1 gap-1 text-center sm:text-left">
-              <CardTitle>Lead Status Chart</CardTitle>
-              <CardDescription>
+          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center gap-2 space-y-2 sm:space-y-0 border-b py-4 sm:py-5">
+            <div className="flex-1 text-center sm:text-left">
+              <CardTitle className="text-lg sm:text-xl">
+                Lead Status Chart
+              </CardTitle>
+              <CardDescription className="text-sm sm:text-base">
                 Showing Demo and Sale leads over time
               </CardDescription>
             </div>
@@ -463,7 +474,7 @@ const DashboardPage: React.FC = () => {
               }}
             >
               <SelectTrigger
-                className="w-[160px] rounded-lg sm:ml-auto"
+                className="w-full sm:w-40 rounded-lg"
                 aria-label="Select Time Range"
               >
                 <SelectValue />
@@ -484,7 +495,7 @@ const DashboardPage: React.FC = () => {
           <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
             <ChartContainer
               config={chartConfig}
-              className="aspect-auto h-[400px] w-full"
+              className="aspect-w-16 aspect-h-9 h-64 sm:h-80 w-full"
             >
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
@@ -537,26 +548,26 @@ const DashboardPage: React.FC = () => {
           </CardContent>
           <CardFooter>
             {/* <div className="flex w-full items-start gap-2 text-sm">
-              <div className="grid gap-2">
-                <div className="flex items-center gap-2 font-medium leading-none">
-                  Trending up by 5.2% this month{" "}
-                  <TrendingUp className="h-4 w-4" />
+                <div className="grid gap-2">
+                  <div className="flex items-center gap-2 font-medium leading-none">
+                    Trending up by 5.2% this month{" "}
+                    <TrendingUp className="h-4 w-4" />
+                  </div>
+                  <div className="flex items-center gap-2 leading-none text-muted-foreground">
+                    Showing total leads for the selected time range
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 leading-none text-muted-foreground">
-                  Showing total leads for the selected time range
-                </div>
-              </div>
-            </div> */}
+              </div> */}
           </CardFooter>
         </Card>
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Latest Leads */}
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="w-full hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle>Latest Leads</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Latest Leads</CardTitle>
           </CardHeader>
           <CardContent>
             <ul>
@@ -564,10 +575,10 @@ const DashboardPage: React.FC = () => {
                 .filter((lead) => lead.first_name)
                 .map((lead) => (
                   <li key={lead.id} className="py-2 border-b last:border-none">
-                    <p className="font-semibold text-gray-800 dark:text-white">
+                    <p className="font-semibold text-gray-800 dark:text-white text-sm sm:text-base">
                       {lead.first_name} {lead.last_name}
                     </p>
-                    <p className="text-sm text-gray-600 dark:text-neutral-400">
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-neutral-400">
                       Email: {lead.email}
                     </p>
                   </li>
@@ -577,7 +588,7 @@ const DashboardPage: React.FC = () => {
           <CardFooter>
             <Button
               variant="outline"
-              className="w-full"
+              className="w-full text-sm sm:text-base text-rose-500 hover:bg-rose-500 hover:text-white"
               onClick={() => router.push("/leads")}
             >
               View All Leads
@@ -586,18 +597,20 @@ const DashboardPage: React.FC = () => {
         </Card>
 
         {/* Latest Programs */}
-        <Card className="hover:shadow-lg transition-shadow">
+        <Card className="w-full hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle>Latest Programs</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">
+              Latest Programs
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <ul>
               {latestPrograms.map((program) => (
                 <li key={program.id} className="py-2 border-b last:border-none">
-                  <p className="font-semibold text-gray-800 dark:text-white">
+                  <p className="font-semibold text-gray-800 dark:text-white text-sm sm:text-base">
                     {program.name}
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-neutral-400">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-neutral-400">
                     Created At:{" "}
                     {new Date(program.created_at).toLocaleDateString()}
                   </p>
@@ -608,7 +621,7 @@ const DashboardPage: React.FC = () => {
           <CardFooter>
             <Button
               variant="outline"
-              className="w-full"
+              className="w-full text-sm sm:text-base text-rose-500 hover:bg-rose-500 hover:text-white"
               onClick={() => router.push("/programs")}
             >
               View All Programs
@@ -618,25 +631,27 @@ const DashboardPage: React.FC = () => {
 
         {/* Reports Summary */}
         {reportNumbers && (
-          <Card className="hover:shadow-lg transition-shadow">
+          <Card className="w-full hover:shadow-lg transition-shadow">
             <CardHeader>
-              <CardTitle>Reports Summary</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">
+                Reports Summary
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <p className="text-gray-800 dark:text-white">
+                <p className="text-gray-800 dark:text-white text-sm sm:text-base">
                   <span className="font-semibold">Total Leads:</span>{" "}
                   {reportNumbers.totalLeads}
                 </p>
-                <p className="text-gray-800 dark:text-white">
+                <p className="text-gray-800 dark:text-white text-sm sm:text-base">
                   <span className="font-semibold">Total Demos:</span>{" "}
                   {reportNumbers.totalDemos}
                 </p>
-                <p className="text-gray-800 dark:text-white">
+                <p className="text-gray-800 dark:text-white text-sm sm:text-base">
                   <span className="font-semibold">Total Sales:</span>{" "}
                   {reportNumbers.totalSales}
                 </p>
-                <p className="text-gray-800 dark:text-white">
+                <p className="text-gray-800 dark:text-white text-sm sm:text-base">
                   <span className="font-semibold">Active Programs:</span>{" "}
                   {reportNumbers.activePrograms}
                 </p>
@@ -645,7 +660,7 @@ const DashboardPage: React.FC = () => {
             <CardFooter>
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-full text-sm sm:text-base text-rose-500 hover:bg-rose-500 hover:text-white"
                 onClick={() => router.push("/reports")}
               >
                 View Detailed Reports

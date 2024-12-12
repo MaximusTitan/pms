@@ -260,57 +260,89 @@ export default function AdminPage() {
 
   return (
     <div className="p-6 bg-neutral-50 min-h-screen">
-      <h1 className="text-2xl font-semibold mb-8 text-black dark:text-white">
+      <h1 className="text-2xl font-semibold mb-8 text-rose-600 dark:text-white">
         Welcome Back Admin🫡
       </h1>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        <div
-          className="bg-white rounded-lg shadow p-4 text-center cursor-pointer"
-          onClick={() => (window.location.href = "/admin/leads")}
-        >
-          <p className="text-lg font-semibold text-gray-700">Total Leads</p>
-          <p className="text-2xl font-bold text-gray-900">
-            <CountUp end={reportNumbers?.totalLeads || 0} />
-          </p>
-        </div>
-        <div
-          className="bg-white rounded-lg shadow p-4 text-center cursor-pointer"
-          onClick={() => (window.location.href = "/admin/reports")}
-        >
-          <p className="text-lg font-semibold text-gray-700">Total Demos</p>
-          <p className="text-2xl font-bold text-gray-900">
-            <CountUp end={reportNumbers?.totalDemos || 0} />
-          </p>
-        </div>
-        <div
-          className="bg-white rounded-lg shadow p-4 text-center cursor-pointer"
-          onClick={() => (window.location.href = "/admin/reports")}
-        >
-          <p className="text-lg font-semibold text-gray-700">Total Sales</p>
-          <p className="text-2xl font-bold text-gray-900">
-            <CountUp end={reportNumbers?.totalSales || 0} />
-          </p>
-        </div>
-        <div
-          className="bg-white rounded-lg shadow p-4 text-center cursor-pointer"
-          onClick={() => (window.location.href = "/admin/programs")}
-        >
-          <p className="text-lg font-semibold text-gray-700">Active Programs</p>
-          <p className="text-2xl font-bold text-gray-900">
-            <CountUp end={reportNumbers?.activePrograms || 0} />
-          </p>
-        </div>
-        <div
-          className="bg-white rounded-lg shadow p-4 text-center cursor-pointer"
-          onClick={() => (window.location.href = "/admin/affiliates")}
-        >
-          <p className="text-lg font-semibold text-gray-700">
-            Total Affiliates
-          </p>
-          <p className="text-2xl font-bold text-gray-900">
-            <CountUp end={reportNumbers?.pendingAffiliates || 0} />
-          </p>
-        </div>
+        {reportNumbers && (
+          <>
+            <Card
+              className="w-full cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => (window.location.href = "/admin/leads")}
+            >
+              <CardContent className="p-4 sm:p-6 text-left">
+                <p className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-rose-300 via-rose-500 to-rose-700 font-sans">
+                  <CountUp end={reportNumbers.totalLeads || 0} duration={1} />
+                </p>
+                <p className="text-md sm:text-lg font-medium text-gray-600 dark:text-neutral-400 mt-2">
+                  Total Leads
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="w-full cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => (window.location.href = "/admin/reports")}
+            >
+              <CardContent className="p-4 sm:p-6 text-left">
+                <p className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-rose-300 via-rose-500 to-rose-700 font-sans">
+                  <CountUp end={reportNumbers.totalDemos || 0} duration={1} />
+                </p>
+                <p className="text-md sm:text-lg font-medium text-gray-600 dark:text-neutral-400 mt-2">
+                  Total Demos
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="w-full cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => (window.location.href = "/admin/reports")}
+            >
+              <CardContent className="p-4 sm:p-6 text-left">
+                <p className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-rose-300 via-rose-500 to-rose-700 font-sans">
+                  <CountUp end={reportNumbers.totalSales || 0} duration={1} />
+                </p>
+                <p className="text-md sm:text-lg font-medium text-gray-600 dark:text-neutral-400 mt-2">
+                  Total Sales
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="w-full cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => (window.location.href = "/admin/programs")}
+            >
+              <CardContent className="p-4 sm:p-6 text-left">
+                <p className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-rose-300 via-rose-500 to-rose-700 font-sans">
+                  <CountUp
+                    end={reportNumbers.activePrograms || 0}
+                    duration={1}
+                  />
+                </p>
+                <p className="text-md sm:text-lg font-medium text-gray-600 dark:text-neutral-400 mt-2">
+                  Active Programs
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="w-full cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => (window.location.href = "/admin/affiliates")}
+            >
+              <CardContent className="p-4 sm:p-6 text-left">
+                <p className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-rose-300 via-rose-500 to-rose-700 font-sans">
+                  <CountUp
+                    end={reportNumbers.pendingAffiliates || 0}
+                    duration={1}
+                  />
+                </p>
+                <p className="text-md sm:text-lg font-medium text-gray-600 dark:text-neutral-400 mt-2">
+                  Total Affiliates
+                </p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* Add Chart */}
@@ -446,7 +478,7 @@ export default function AdminPage() {
           </ul>
           <Button
             variant="outline"
-            className="w-full border-gray-300 hover:bg-gray-100 text-gray-800"
+            className="w-full text-sm sm:text-base text-rose-500 hover:bg-rose-500 hover:text-white"
             onClick={() => (window.location.href = "/admin/affiliates")}
           >
             View All Affiliates
@@ -474,7 +506,7 @@ export default function AdminPage() {
           </ul>
           <Button
             variant="outline"
-            className="w-full border-gray-300 hover:bg-gray-100 text-gray-800"
+            className="w-full text-sm sm:text-base text-rose-500 hover:bg-rose-500 hover:text-white"
             onClick={() => (window.location.href = "/admin/leads")}
           >
             View All Leads
@@ -503,7 +535,7 @@ export default function AdminPage() {
           </ul>
           <Button
             variant="outline"
-            className="w-full border-gray-300 hover:bg-gray-100 text-gray-800"
+            className="w-full text-sm sm:text-base text-rose-500 hover:bg-rose-500 hover:text-white"
             onClick={() => (window.location.href = "/admin/programs")}
           >
             View All Programs
@@ -540,7 +572,7 @@ export default function AdminPage() {
             </div>
             <Button
               variant="outline"
-              className="w-full border-gray-300 hover:bg-gray-100 text-gray-800 mt-4"
+              className="w-full text-sm sm:text-base text-rose-500 hover:bg-rose-500 hover:text-white"
               onClick={() => (window.location.href = "/admin/reports")}
             >
               View Detailed Reports
