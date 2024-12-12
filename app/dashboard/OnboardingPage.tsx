@@ -9,14 +9,17 @@ const OnboardingPage: React.FC = () => {
   const [fullName, setFullName] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     const formattedId = affiliateId.toUpperCase();
 
     if (formattedId.length < 5) {
       setError("Affiliate ID must be at least 5 characters.");
+      setIsLoading(false);
       return;
     }
 
@@ -26,6 +29,7 @@ const OnboardingPage: React.FC = () => {
 
       if (userError || !userData.user) {
         setError("Failed to retrieve user information.");
+        setIsLoading(false);
         return;
       }
 
@@ -39,6 +43,7 @@ const OnboardingPage: React.FC = () => {
 
       if (data) {
         setError("Affiliate ID already exists. Please choose another one.");
+        setIsLoading(false);
         return;
       }
 
@@ -53,12 +58,14 @@ const OnboardingPage: React.FC = () => {
 
       if (updateError) {
         setError("Failed to update affiliate information. Please try again.");
+        setIsLoading(false);
       } else {
         setSuccess("Affiliate ID created successfully!");
         window.location.href = "/dashboard";
       }
     } catch (err) {
       setError("An unexpected error occurred.");
+      setIsLoading(false);
     }
   };
 
@@ -91,9 +98,10 @@ const OnboardingPage: React.FC = () => {
           </label>
           <button
             type="submit"
+            disabled={isLoading}
             className="w-full bg-rose-500 text-white py-2 px-4 rounded hover:bg-rose-600 transition"
           >
-            Create ID
+            {isLoading ? "Loading..." : "Create ID"}
           </button>
         </form>
         {error && <p className="mt-4 text-red-500">{error}</p>}

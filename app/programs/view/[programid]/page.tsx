@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MediaManager from "@/app/admin/programs/[programid]/manage/MediaManager";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { CopyLinkButton } from "./CopyLinkButton";
 
 type PageProps = {
   params: Promise<{ programid: string }>; // Mark params as a Promise
@@ -172,14 +173,22 @@ export default async function ProgramViewPage(props: PageProps) {
 
                 {/* Construct the URL with the affiliate ID */}
                 {affiliateId && (
-                  <a
-                    href={`${link.url}?sourceId=${affiliateId}`}
-                    className="text-blue-500"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {link.url}?sourceId={affiliateId}
-                  </a>
+                  <div className="flex items-center space-x-2">
+                    {" "}
+                    {/* Added flex container with spacing */}
+                    <a
+                      href={`${link.url}?sourceId=${affiliateId}`}
+                      className="text-blue-500"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {link.url}?sourceId={affiliateId}
+                    </a>
+                    <CopyLinkButton
+                      link={`${link.url}?sourceId=${affiliateId}`}
+                      className="h-4 w-4"
+                    />
+                  </div>
                 )}
 
                 {/* Display description if it exists */}

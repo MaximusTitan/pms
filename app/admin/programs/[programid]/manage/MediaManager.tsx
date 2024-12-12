@@ -226,6 +226,7 @@ const MediaManager: React.FC<MediaManagerProps> = ({
       {isFullScreen && selectedItem && (
         <Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
           <DialogContent className="max-w-none w-full h-full p-0">
+            <DialogTitle>Media Viewer</DialogTitle>
             {/* Close Button */}
             <button
               onClick={() => setIsFullScreen(false)}

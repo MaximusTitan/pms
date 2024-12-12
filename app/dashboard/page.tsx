@@ -116,6 +116,7 @@ const DashboardPage: React.FC = () => {
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [timeRange, setTimeRange] = useState<"30d" | "90d" | "180d">("90d");
   const [error, setError] = useState<string | null>(null);
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -129,13 +130,14 @@ const DashboardPage: React.FC = () => {
         if (user?.email) {
           const { data: affiliateData } = await client
             .from("affiliates")
-            .select("affiliate_id")
+            .select("affiliate_id, full_name")
             .eq("work_email", user.email)
             .single();
 
           if (affiliateData) {
             setAffiliateId(affiliateData.affiliate_id);
             setPartnerId(affiliateData.affiliate_id); // Ensure partnerId is set
+            setUserName(affiliateData.full_name); // Set the user's full name
           }
         }
       } catch (err) {
@@ -250,6 +252,7 @@ const DashboardPage: React.FC = () => {
       };
 
       fetchCurrentPartnerDetails();
+      fetchProgramDetails(); // Add this line to use fetchProgramDetails
     }
   }, [supabase, partnerId, latestPrograms]); // Added latestPrograms to dependencies
 
@@ -398,8 +401,8 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-neutral-900 p-6">
-      <h1 className="text-4xl font-extrabold mb-8 text-gray-900 dark:text-white">
-        Partner Dashboard
+      <h1 className="text-3xl font-bold mb-8 text-gray-900 dark:text-white">
+        Welcome {userName}!
       </h1>
 
       {/* Summary Cards */}

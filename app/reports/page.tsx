@@ -47,6 +47,10 @@ interface Lead {
 const client = createClient();
 
 const chartConfig: ChartConfig = {
+  Lead: {
+    label: "Lead",
+    color: "hsl(var(--chart-3))",
+  },
   Demo: {
     label: "Demo",
     color: "hsl(var(--chart-1))",
@@ -59,6 +63,7 @@ const chartConfig: ChartConfig = {
 
 interface ChartDataPoint {
   date: string;
+  Lead: number;
   Demo: number;
   Sale: number;
 }
@@ -155,7 +160,9 @@ const ReportsPage: React.FC = () => {
       });
 
       // Aggregate leads by date
-      const aggregation: { [key: string]: { Demo: number; Sale: number } } = {};
+      const aggregation: {
+        [key: string]: { Lead: number; Demo: number; Sale: number };
+      } = {};
 
       filteredLeads.forEach((lead) => {
         if (!lead.create_date) return;
@@ -163,8 +170,10 @@ const ReportsPage: React.FC = () => {
         const dateKey = date.toISOString().split("T")[0]; // YYYY-MM-DD
 
         if (!aggregation[dateKey]) {
-          aggregation[dateKey] = { Demo: 0, Sale: 0 };
+          aggregation[dateKey] = { Lead: 0, Demo: 0, Sale: 0 };
         }
+
+        aggregation[dateKey].Lead += 1; // Count total leads
 
         if (lead.hs_lead_status === "Orientation scheduled") {
           aggregation[dateKey].Demo += 1;
@@ -177,6 +186,7 @@ const ReportsPage: React.FC = () => {
       const chartDataArray: ChartDataPoint[] = Object.keys(aggregation).map(
         (date) => ({
           date,
+          Lead: aggregation[date].Lead,
           Demo: aggregation[date].Demo,
           Sale: aggregation[date].Sale,
         })
@@ -292,6 +302,13 @@ const ReportsPage: React.FC = () => {
                   <YAxis allowDecimals={false} />
                   <Tooltip content={<ChartTooltipContent />} />
                   <Line
+                    dataKey="Lead"
+                    type="monotone"
+                    stroke={chartConfig.Lead.color}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                  <Line
                     dataKey="Demo"
                     type="monotone"
                     stroke={chartConfig.Demo.color}
@@ -310,7 +327,7 @@ const ReportsPage: React.FC = () => {
             </ChartContainer>
           </CardContent>
           <CardFooter>
-            <div className="flex w-full items-start gap-2 text-sm">
+            {/* <div className="flex w-full items-start gap-2 text-sm">
               <div className="grid gap-2">
                 <div className="flex items-center gap-2 font-medium leading-none">
                   Trending up by 5.2% this month{" "}
@@ -320,7 +337,7 @@ const ReportsPage: React.FC = () => {
                   Showing total leads for the selected time range
                 </div>
               </div>
-            </div>
+            </div> */}
           </CardFooter>
         </Card>
       </div>
