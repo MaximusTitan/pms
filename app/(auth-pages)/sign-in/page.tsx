@@ -7,19 +7,17 @@ import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation"; // Added import
 
-interface LoginProps {
-  searchParams: Promise<Message>;
-}
-
-export default function Login({ searchParams }: LoginProps) {
+export default function Login() {
   const [message, setMessage] = useState<Message | null>(null);
+  const searchParams = useSearchParams(); // Use the hook
 
-  // Use useEffect to resolve the searchParams Promise
   useEffect(() => {
-    searchParams.then(setMessage).catch(
-      (err) => setMessage({ error: "Failed to load message" }) // Corrected structure
-    );
+    const errorMessage = searchParams.get("error"); // Changed 'message' to 'error'
+    if (errorMessage) {
+      setMessage({ error: errorMessage });
+    }
   }, [searchParams]);
 
   return (

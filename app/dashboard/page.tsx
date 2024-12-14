@@ -118,6 +118,9 @@ const DashboardPage: React.FC = () => {
   const [timeRange, setTimeRange] = useState<"30d" | "90d" | "180d">("90d");
   const [error, setError] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
+  const [dataFilter, setDataFilter] = useState<
+    "All" | "Lead" | "Demo" | "Sale"
+  >("All");
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -467,30 +470,59 @@ const DashboardPage: React.FC = () => {
                 Showing Demo and Sale leads over time
               </CardDescription>
             </div>
-            <Select
-              value={timeRange}
-              onValueChange={(value: "30d" | "90d" | "180d") => {
-                setTimeRange(value);
-              }}
-            >
-              <SelectTrigger
-                className="w-full sm:w-40 rounded-lg"
-                aria-label="Select Time Range"
+            <div className="flex items-center gap-2">
+              <Select
+                value={timeRange}
+                onValueChange={(value: "30d" | "90d" | "180d") => {
+                  setTimeRange(value);
+                }}
               >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="rounded-xl">
-                <SelectItem value="30d" className="rounded-lg">
-                  Last 30 days
-                </SelectItem>
-                <SelectItem value="90d" className="rounded-lg">
-                  Last 90 days
-                </SelectItem>
-                <SelectItem value="180d" className="rounded-lg">
-                  Last 180 days
-                </SelectItem>
-              </SelectContent>
-            </Select>
+                <SelectTrigger
+                  className="w-full sm:w-40 rounded-lg"
+                  aria-label="Select Time Range"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="30d" className="rounded-lg">
+                    Last 30 days
+                  </SelectItem>
+                  <SelectItem value="90d" className="rounded-lg">
+                    Last 90 days
+                  </SelectItem>
+                  <SelectItem value="180d" className="rounded-lg">
+                    Last 180 days
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={dataFilter}
+                onValueChange={(value: "All" | "Lead" | "Demo" | "Sale") =>
+                  setDataFilter(value)
+                }
+              >
+                <SelectTrigger
+                  className="w-full sm:w-40 rounded-lg"
+                  aria-label="Select Data Filter"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="All" className="rounded-lg">
+                    All
+                  </SelectItem>
+                  <SelectItem value="Lead" className="rounded-lg">
+                    Leads
+                  </SelectItem>
+                  <SelectItem value="Demo" className="rounded-lg">
+                    Demos
+                  </SelectItem>
+                  <SelectItem value="Sale" className="rounded-lg">
+                    Sales
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
             <ChartContainer
@@ -521,27 +553,33 @@ const DashboardPage: React.FC = () => {
                   />
                   <YAxis allowDecimals={false} />
                   <Tooltip content={<ChartTooltipContent />} />
-                  <Line
-                    dataKey="Lead"
-                    type="monotone"
-                    stroke={chartConfig.Lead.color}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    dataKey="Demo"
-                    type="monotone"
-                    stroke={chartConfig.Demo.color}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    dataKey="Sale"
-                    type="monotone"
-                    stroke={chartConfig.Sale.color}
-                    strokeWidth={2}
-                    dot={false}
-                  />
+                  {(dataFilter === "All" || dataFilter === "Lead") && (
+                    <Line
+                      dataKey="Lead"
+                      type="monotone"
+                      stroke={chartConfig.Lead.color}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  )}
+                  {(dataFilter === "All" || dataFilter === "Demo") && (
+                    <Line
+                      dataKey="Demo"
+                      type="monotone"
+                      stroke={chartConfig.Demo.color}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  )}
+                  {(dataFilter === "All" || dataFilter === "Sale") && (
+                    <Line
+                      dataKey="Sale"
+                      type="monotone"
+                      stroke={chartConfig.Sale.color}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  )}
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>

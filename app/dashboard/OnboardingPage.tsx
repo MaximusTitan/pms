@@ -77,21 +77,21 @@ const OnboardingPage: React.FC = () => {
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <label className="block">
-            <span className="text-gray-700">Affiliate ID:</span>
-            <input
-              type="text"
-              value={affiliateId}
-              onChange={(e) => setAffiliateId(e.target.value)}
-              required
-              className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-rose-500 focus:border-rose-500"
-            />
-          </label>
-          <label className="block">
             <span className="text-gray-700">Full Name:</span>
             <input
               type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
+              required
+              className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-rose-500 focus:border-rose-500"
+            />
+          </label>
+          <label className="block">
+            <span className="text-gray-700">Affiliate ID:</span>
+            <input
+              type="text"
+              value={affiliateId}
+              onChange={(e) => setAffiliateId(e.target.value)}
               required
               className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md focus:outline-none focus:ring-rose-500 focus:border-rose-500"
             />

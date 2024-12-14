@@ -77,6 +77,9 @@ const ReportsPage: React.FC = () => {
   const [partnerId, setPartnerId] = useState<string>("all"); // Initialize partnerId to "all" to represent selecting all partners
   const [partnerIds, setPartnerIds] = useState<string[]>([]); // Ensures partnerIds is an array of strings
   const [affiliateId, setAffiliateId] = useState<string | null>(null); // Add affiliateId state
+  const [dataFilter, setDataFilter] = useState<
+    "all" | "Lead" | "Demo" | "Sale"
+  >("all");
 
   useEffect(() => {
     const fetchAffiliateId = async () => {
@@ -207,7 +210,7 @@ const ReportsPage: React.FC = () => {
 
   return (
     <div className="p-4">
-      {/* Adjust layout to position Select on the right */}
+      {/* Keep the timeRange Select at the top */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Reports Management</h1>
         <Select
@@ -283,7 +286,7 @@ const ReportsPage: React.FC = () => {
 
       {/* Existing Charts */}
       <Card>
-        <CardHeader className="flex flex-col sm:flex-row items-center gap-2 space-y-2 sm:space-y-0 sm:justify-between border-b py-5">
+        <CardHeader className="flex flex-col sm:flex-row items-center gap-2 sm:justify-between border-b py-5">
           <div className="grid flex-1 gap-1 text-center sm:text-left">
             <CardTitle>Lead Status Chart</CardTitle>
             <CardDescription>
@@ -291,14 +294,38 @@ const ReportsPage: React.FC = () => {
             </CardDescription>
           </div>
           <Select
-            value={timeRange}
+            value={dataFilter}
             onValueChange={(value: string) => {
-              if (value === "30d" || value === "90d" || value === "180d") {
-                setTimeRange(value);
+              if (
+                value === "all" ||
+                value === "Lead" ||
+                value === "Demo" ||
+                value === "Sale"
+              ) {
+                setDataFilter(value as "all" | "Lead" | "Demo" | "Sale");
               }
             }}
           >
-            {/* ...existing Select code... */}
+            <SelectTrigger
+              className="w-full sm:w-[160px] rounded-lg"
+              aria-label="Select Data Filter"
+            >
+              <SelectValue placeholder="All Data" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="all" className="rounded-lg">
+                All Data
+              </SelectItem>
+              <SelectItem value="Lead" className="rounded-lg">
+                Leads
+              </SelectItem>
+              <SelectItem value="Demo" className="rounded-lg">
+                Demos
+              </SelectItem>
+              <SelectItem value="Sale" className="rounded-lg">
+                Sales
+              </SelectItem>
+            </SelectContent>
           </Select>
         </CardHeader>
         <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
@@ -330,27 +357,33 @@ const ReportsPage: React.FC = () => {
                 />
                 <YAxis allowDecimals={false} />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Line
-                  dataKey="Lead"
-                  type="monotone"
-                  stroke={chartConfig.Lead.color}
-                  strokeWidth={2}
-                  dot={false}
-                />
-                <Line
-                  dataKey="Demo"
-                  type="monotone"
-                  stroke={chartConfig.Demo.color}
-                  strokeWidth={2}
-                  dot={false}
-                />
-                <Line
-                  dataKey="Sale"
-                  type="monotone"
-                  stroke={chartConfig.Sale.color}
-                  strokeWidth={2}
-                  dot={false}
-                />
+                {(dataFilter === "all" || dataFilter === "Lead") && (
+                  <Line
+                    dataKey="Lead"
+                    type="monotone"
+                    stroke={chartConfig.Lead.color}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                )}
+                {(dataFilter === "all" || dataFilter === "Demo") && (
+                  <Line
+                    dataKey="Demo"
+                    type="monotone"
+                    stroke={chartConfig.Demo.color}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                )}
+                {(dataFilter === "all" || dataFilter === "Sale") && (
+                  <Line
+                    dataKey="Sale"
+                    type="monotone"
+                    stroke={chartConfig.Sale.color}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           </ChartContainer>
