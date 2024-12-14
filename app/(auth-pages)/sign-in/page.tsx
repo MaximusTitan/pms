@@ -1,24 +1,19 @@
 "use client"; // Ensure it's a Client Component
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { signInAction } from "@/app/actions";
 import { FormMessage, Message } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation"; // Added import
 
-export default function Login() {
-  const [message, setMessage] = useState<Message | null>(null);
-  const searchParams = useSearchParams(); // Use the hook
+interface LoginProps {
+  searchParams: Promise<Message>;
+}
 
-  useEffect(() => {
-    const errorMessage = searchParams.get("error"); // Changed 'message' to 'error'
-    if (errorMessage) {
-      setMessage({ error: errorMessage });
-    }
-  }, [searchParams]);
+export default function Login({ searchParams }: LoginProps) {
+  const params = use<Message>(searchParams);
 
   return (
     <div className="h-screen flex items-center justify-center bg-gradient-to-b from-rose-50 to-white">
@@ -84,7 +79,7 @@ export default function Login() {
             Sign in
           </SubmitButton>
 
-          {message && <FormMessage message={message} />}
+          <FormMessage message={params} />
 
           <p className="text-center text-sm text-gray-600 mt-4">
             By signing in, you agree to our{" "}
