@@ -63,11 +63,19 @@ export default function ProgramsPage() {
   return (
     <main className="min-h-screen p-8">
       <h1 className="text-2xl font-bold mb-4">My Programs</h1>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {programs.map((program) => (
-          <ProgramCard key={program.id} program={program} />
-        ))}
-      </div>
+      {programs.length === 0 ? (
+        <div className="flex items-center justify-center text-2xl font-normal text-center mt-8">
+          You are not assigned to any programs.
+          <br />
+          Contact admin to get assigned to programs.
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {programs.map((program) => (
+            <ProgramCard key={program.id} program={program} />
+          ))}
+        </div>
+      )}
     </main>
   );
 }

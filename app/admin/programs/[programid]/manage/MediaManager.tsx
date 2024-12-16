@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Trash2, Maximize2, XCircle } from "lucide-react";
+import { Trash2, Maximize2, Download } from "lucide-react"; // Added Download2
 import { createClient } from "@/utils/supabase/client";
 import { Input } from "@/components/ui/input"; // Import the Input component from shadcn UI
 
@@ -132,6 +132,10 @@ const MediaManager: React.FC<MediaManagerProps> = ({
     setIsFullScreen(true);
   };
 
+  const handleDownload = (url: string) => {
+    window.open(url, "_blank");
+  };
+
   return (
     <div>
       <div className="space-y-4">
@@ -173,14 +177,14 @@ const MediaManager: React.FC<MediaManagerProps> = ({
                             <img
                               src={url}
                               alt={`Media ${index + 1}`}
-                              className="w-full h-full object-cover rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                              className="w-full h-auto object-contain rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
                               onClick={() => handleFullScreen(url, type)}
                             />
                           )}
                           {type === "videos" && (
                             <video
                               src={url}
-                              className="w-full h-full object-cover rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                              className="w-full h-auto object-contain rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
                               onClick={() => handleFullScreen(url, type)}
                             />
                           )}
@@ -199,6 +203,12 @@ const MediaManager: React.FC<MediaManagerProps> = ({
                             className="text-white bg-black bg-opacity-50 p-1 rounded"
                           >
                             <Maximize2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDownload(url)}
+                            className="text-white bg-black bg-opacity-50 p-1 rounded"
+                          >
+                            <Download className="w-4 h-4" />
                           </button>
                           {isAdmin && (
                             <button
@@ -225,36 +235,34 @@ const MediaManager: React.FC<MediaManagerProps> = ({
 
       {isFullScreen && selectedItem && (
         <Dialog open={isFullScreen} onOpenChange={setIsFullScreen}>
-          <DialogContent className="max-w-none w-full h-full p-0">
-            <DialogTitle>Media Viewer</DialogTitle>
-            {/* Close Button */}
-            <button
-              onClick={() => setIsFullScreen(false)}
-              className="absolute top-2 right-2 text-white z-10"
-            >
-              <XCircle className="w-6 h-6" />
-            </button>
+          <DialogContent className="max-w-3xl w-full h-[80vh] p-0 flex flex-col">
+            <DialogTitle className="p-4">Media Viewer</DialogTitle>
             {/* Display Media */}
-            {selectedType === "images" && (
-              <img
-                src={selectedItem}
-                alt="Full Screen"
-                className="w-full h-full object-contain"
-              />
-            )}
-            {selectedType === "videos" && (
-              <video src={selectedItem} controls className="w-full h-full" />
-            )}
-            {selectedType === "pdfs" && (
-              <object
-                data={selectedItem}
-                type="application/pdf"
-                className="w-full h-full"
-                aria-label="PDF Viewer"
-              >
-                <p>Your browser does not support PDFs.</p>
-              </object>
-            )}
+            <div className="flex-grow">
+              {selectedType === "images" && (
+                <img
+                  src={selectedItem}
+                  alt="Full Screen"
+                  className="w-full h-full object-contain"
+                />
+              )}
+              {selectedType === "videos" && (
+                <video
+                  src={selectedItem}
+                  controls
+                  className="w-full h-full object-contain"
+                />
+              )}
+              {selectedType === "pdfs" && (
+                <iframe
+                  src={selectedItem}
+                  className="w-full h-full border-0"
+                  aria-label="PDF Viewer"
+                >
+                  <p>Your browser does not support PDFs.</p>
+                </iframe>
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       )}
