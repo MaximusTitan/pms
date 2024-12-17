@@ -4,6 +4,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { PasswordInput } from "@/components/PasswordInput"; // Added import
 
 export default async function Signup(props: {
   searchParams: Promise<Message>;
@@ -51,8 +52,7 @@ export default async function Signup(props: {
             <Label htmlFor="password" className="text-gray-700">
               Password
             </Label>
-            <Input
-              type="password"
+            <PasswordInput
               name="password"
               placeholder="Your password"
               minLength={6}

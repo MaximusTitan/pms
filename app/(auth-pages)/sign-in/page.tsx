@@ -7,6 +7,7 @@ import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react"; // Added lucide-react icons
 
 interface LoginProps {
   searchParams: Promise<Message>;
@@ -14,6 +15,7 @@ interface LoginProps {
 
 export default function Login({ searchParams }: LoginProps) {
   const params = use<Message>(searchParams);
+  const [showPassword, setShowPassword] = useState(false); // Added state
 
   return (
     <div className="h-screen flex items-center justify-center bg-gradient-to-b from-rose-50 to-white">
@@ -62,14 +64,24 @@ export default function Login({ searchParams }: LoginProps) {
                 Forgot Password?
               </Link>
             </div>
-            <Input
-              type="password"
-              name="password"
-              placeholder="Your password"
-              required
-              className="border-gray-300 focus:border-rose-500 focus:ring-rose-500"
-              aria-label="Password"
-            />
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"} // Modified type
+                name="password"
+                placeholder="Your password"
+                required
+                className="border-gray-300 focus:border-rose-500 focus:ring-rose-500 pr-10"
+                aria-label="Password"
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 px-3 flex items-center text-gray-600"
+                onClick={() => setShowPassword(!showPassword)} // Toggle visibility
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}{" "}
+                {/* Show icon */}
+              </button>
+            </div>
           </div>
 
           <SubmitButton
