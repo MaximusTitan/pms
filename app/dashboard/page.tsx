@@ -4,38 +4,12 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import OnboardingPage from "./OnboardingPage"; // Import the onboarding component
-import { Button } from "@/components/ui/button";
-import CountUp from "react-countup";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import {
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Line,
-  LineChart,
-} from "recharts";
-import { CardDescription } from "@/components/ui/card";
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { TrendingUp } from "lucide-react";
+import { ChartConfig } from "@/components/ui/chart";
+import SummaryCards from "@/components/SummaryCards";
+import ChartSection from "@/components/ChartSection";
+import LatestLeads from "@/components/LatestLeads";
+import LatestPrograms from "@/components/LatestPrograms";
+import ReportsSummary from "@/components/ReportsSummary";
 
 interface Affiliate {
   id: number;
@@ -398,6 +372,15 @@ const DashboardPage: React.FC = () => {
     }));
   }, [latestPrograms]);
 
+  const isAllDataZero = () => {
+    return (
+      reportNumbers.totalLeads === 0 &&
+      reportNumbers.totalDemos === 0 &&
+      reportNumbers.totalSales === 0 &&
+      reportNumbers.activePrograms === 0
+    );
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -418,293 +401,44 @@ const DashboardPage: React.FC = () => {
       </h1>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        {[
-          {
-            title: "Total Leads",
-            value: reportNumbers.totalLeads,
-            link: "/leads",
-          },
-          {
-            title: "Total Demos",
-            value: reportNumbers.totalDemos,
-            link: "/reports",
-          },
-          {
-            title: "Total Sales",
-            value: reportNumbers.totalSales,
-            link: "/reports",
-          },
-          {
-            title: "Active Programs",
-            value: reportNumbers.activePrograms,
-            link: "/programs",
-          },
-        ].map((item) => (
-          <Card
-            key={item.title}
-            className="w-full cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => router.push(item.link)}
-          >
-            <CardContent className="p-4 sm:p-6 text-left">
-              <p className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-rose-300 via-rose-500 to-rose-700 font-sans">
-                <CountUp end={item.value || 0} duration={1} />
-              </p>
-              <p className="text-md sm:text-lg font-medium text-gray-600 dark:text-neutral-400 mt-2">
-                {item.title}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <SummaryCards reportNumbers={reportNumbers} router={router} />
 
-      {/* Add Chart */}
-      <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6 sm:mb-8">
-        <Card>
-          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center gap-2 space-y-2 sm:space-y-0 border-b py-4 sm:py-5">
-            <div className="flex-1 text-center sm:text-left">
-              <CardTitle className="text-lg sm:text-xl">
-                Lead Status Chart
-              </CardTitle>
-              <CardDescription className="text-sm sm:text-base">
-                Showing Demo and Sale leads over time
-              </CardDescription>
+      {/* Chart Section */}
+      <div className="relative">
+        <div className={isAllDataZero() ? "filter blur-sm" : ""}>
+          <ChartSection
+            chartData={chartData}
+            chartConfig={chartConfig}
+            timeRange={timeRange}
+            setTimeRange={setTimeRange}
+            dataFilter={dataFilter}
+            setDataFilter={setDataFilter}
+          />
+        </div>
+
+        {isAllDataZero() && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="bg-white dark:bg-neutral-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-neutral-700">
+              <p className="text-gray-800 dark:text-gray-200 text-center">
+                No data available yet. Start generating leads to see your
+                performance metrics.
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Select
-                value={timeRange}
-                onValueChange={(value: "30d" | "90d" | "180d") => {
-                  setTimeRange(value);
-                }}
-              >
-                <SelectTrigger
-                  className="w-full sm:w-40 rounded-lg"
-                  aria-label="Select Time Range"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value="30d" className="rounded-lg">
-                    Last 30 days
-                  </SelectItem>
-                  <SelectItem value="90d" className="rounded-lg">
-                    Last 90 days
-                  </SelectItem>
-                  <SelectItem value="180d" className="rounded-lg">
-                    Last 180 days
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-              <Select
-                value={dataFilter}
-                onValueChange={(value: "All" | "Lead" | "Demo" | "Sale") =>
-                  setDataFilter(value)
-                }
-              >
-                <SelectTrigger
-                  className="w-full sm:w-40 rounded-lg"
-                  aria-label="Select Data Filter"
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value="All" className="rounded-lg">
-                    All
-                  </SelectItem>
-                  <SelectItem value="Lead" className="rounded-lg">
-                    Leads
-                  </SelectItem>
-                  <SelectItem value="Demo" className="rounded-lg">
-                    Demos
-                  </SelectItem>
-                  <SelectItem value="Sale" className="rounded-lg">
-                    Sales
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardHeader>
-          <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-            <ChartContainer
-              config={chartConfig}
-              className="aspect-w-16 aspect-h-9 h-64 sm:h-80 w-full"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={chartData}
-                  margin={{
-                    left: 12,
-                    right: 12,
-                  }}
-                >
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => {
-                      const date = new Date(value);
-                      return date.toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      });
-                    }}
-                  />
-                  <YAxis allowDecimals={false} />
-                  <Tooltip content={<ChartTooltipContent />} />
-                  {(dataFilter === "All" || dataFilter === "Lead") && (
-                    <Line
-                      dataKey="Lead"
-                      type="monotone"
-                      stroke={chartConfig.Lead.color}
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  )}
-                  {(dataFilter === "All" || dataFilter === "Demo") && (
-                    <Line
-                      dataKey="Demo"
-                      type="monotone"
-                      stroke={chartConfig.Demo.color}
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  )}
-                  {(dataFilter === "All" || dataFilter === "Sale") && (
-                    <Line
-                      dataKey="Sale"
-                      type="monotone"
-                      stroke={chartConfig.Sale.color}
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  )}
-                </LineChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-          <CardFooter>
-            {/* <div className="flex w-full items-start gap-2 text-sm">
-                <div className="grid gap-2">
-                  <div className="flex items-center gap-2 font-medium leading-none">
-                    Trending up by 5.2% this month{" "}
-                    <TrendingUp className="h-4 w-4" />
-                  </div>
-                  <div className="flex items-center gap-2 leading-none text-muted-foreground">
-                    Showing total leads for the selected time range
-                  </div>
-                </div>
-              </div> */}
-          </CardFooter>
-        </Card>
+          </div>
+        )}
       </div>
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Latest Leads */}
-        <Card className="w-full hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg sm:text-xl">Latest Leads</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul>
-              {latestLeads
-                .filter((lead) => lead.first_name)
-                .map((lead) => (
-                  <li key={lead.id} className="py-2 border-b last:border-none">
-                    <p className="font-semibold text-gray-800 dark:text-white text-sm sm:text-base">
-                      {lead.first_name} {lead.last_name}
-                    </p>
-                    <p className="text-xs sm:text-sm text-gray-600 dark:text-neutral-400">
-                      Email: {lead.email}
-                    </p>
-                  </li>
-                ))}
-            </ul>
-          </CardContent>
-          <CardFooter>
-            <Button
-              variant="outline"
-              className="w-full text-sm sm:text-base text-rose-500 hover:bg-rose-500 hover:text-white"
-              onClick={() => router.push("/leads")}
-            >
-              View All Leads
-            </Button>
-          </CardFooter>
-        </Card>
+        <LatestLeads latestLeads={latestLeads} router={router} />
 
         {/* Latest Programs */}
-        <Card className="w-full hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg sm:text-xl">
-              Latest Programs
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul>
-              {latestPrograms.map((program) => (
-                <li key={program.id} className="py-2 border-b last:border-none">
-                  <p className="font-semibold text-gray-800 dark:text-white text-sm sm:text-base">
-                    {program.name}
-                  </p>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-neutral-400">
-                    Created At:{" "}
-                    {new Date(program.created_at).toLocaleDateString()}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-          <CardFooter>
-            <Button
-              variant="outline"
-              className="w-full text-sm sm:text-base text-rose-500 hover:bg-rose-500 hover:text-white"
-              onClick={() => router.push("/programs")}
-            >
-              View All Programs
-            </Button>
-          </CardFooter>
-        </Card>
+        <LatestPrograms latestPrograms={latestPrograms} router={router} />
 
         {/* Reports Summary */}
         {reportNumbers && (
-          <Card className="w-full hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="text-lg sm:text-xl">
-                Reports Summary
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <p className="text-gray-800 dark:text-white text-sm sm:text-base">
-                  <span className="font-semibold">Total Leads:</span>{" "}
-                  {reportNumbers.totalLeads}
-                </p>
-                <p className="text-gray-800 dark:text-white text-sm sm:text-base">
-                  <span className="font-semibold">Total Demos:</span>{" "}
-                  {reportNumbers.totalDemos}
-                </p>
-                <p className="text-gray-800 dark:text-white text-sm sm:text-base">
-                  <span className="font-semibold">Total Sales:</span>{" "}
-                  {reportNumbers.totalSales}
-                </p>
-                <p className="text-gray-800 dark:text-white text-sm sm:text-base">
-                  <span className="font-semibold">Active Programs:</span>{" "}
-                  {reportNumbers.activePrograms}
-                </p>
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button
-                variant="outline"
-                className="w-full text-sm sm:text-base text-rose-500 hover:bg-rose-500 hover:text-white"
-                onClick={() => router.push("/reports")}
-              >
-                View Detailed Reports
-              </Button>
-            </CardFooter>
-          </Card>
+          <ReportsSummary reportNumbers={reportNumbers} router={router} />
         )}
       </div>
     </div>
