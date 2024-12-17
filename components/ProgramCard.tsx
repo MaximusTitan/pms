@@ -19,6 +19,7 @@ export function ProgramCard({ program }: ProgramCardProps) {
   const router = useRouter();
   const supabase = createClient();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const getAdminEmails = () => {
     const emails = process.env.NEXT_PUBLIC_ADMIN_EMAILS || "";
@@ -40,7 +41,8 @@ export function ProgramCard({ program }: ProgramCardProps) {
     fetchUser();
   }, [supabase]);
 
-  const handleManageClick = () => {
+  const handleManageClick = async () => {
+    setIsLoading(true);
     const programPath = isAdmin
       ? `/admin/programs/${program.id}/manage` // Pass isAdmin as a query parameter
       : `/programs/view/${program.id}`;
@@ -49,11 +51,11 @@ export function ProgramCard({ program }: ProgramCardProps) {
   };
 
   return (
-    <Card className="dark:bg-neutral-800">
+    <Card className="dark:bg-neutral-800 flex flex-col h-full">
       <CardHeader>
         <CardTitle className="text-xl text-rose-500">{program.name}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow">
         <div className="space-y-4">
           {program.overview && (
             <p className="text-sm text-gray-700">{program.overview}</p>
@@ -99,8 +101,13 @@ export function ProgramCard({ program }: ProgramCardProps) {
         <Button
           onClick={handleManageClick}
           className="w-full bg-rose-500 hover:bg-rose-600"
+          disabled={isLoading}
         >
-          {isAdmin ? "Manage Program" : "View Program"}
+          {isLoading
+            ? "Loading..."
+            : isAdmin
+              ? "Manage Program"
+              : "View Program"}
         </Button>
       </CardFooter>
       {/* If needed, pass isAdmin to MediaManager or other components */}

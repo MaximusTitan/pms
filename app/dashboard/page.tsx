@@ -190,6 +190,12 @@ const DashboardPage: React.FC = () => {
             .limit(5);
           setLatestLeads(leads || []);
 
+          // Get active programs count
+          const { data: activePrograms } = await supabase
+            .from("affiliate_programs")
+            .select("program_id")
+            .eq("affiliate_id", id);
+
           // Fetch report numbers
           const [
             totalLeadsRes,
@@ -217,12 +223,11 @@ const DashboardPage: React.FC = () => {
               .eq("affiliate_id", partnerId),
           ]);
 
-          // Set activePrograms to the length of latestPrograms
           setReportNumbers({
             totalLeads: totalLeadsRes.count || 0,
             totalDemos: totalDemosRes.count || 0,
             totalSales: totalSalesRes.count || 0,
-            activePrograms: latestPrograms.length,
+            activePrograms: activePrograms?.length || 0,
             pendingAffiliates: pendingAffiliatesRes.count || 0,
           });
         } catch (error) {
@@ -231,9 +236,9 @@ const DashboardPage: React.FC = () => {
       };
 
       fetchCurrentPartnerDetails();
-      fetchProgramDetails(); // Add this line to use fetchProgramDetails
+      fetchProgramDetails();
     }
-  }, [supabase, partnerId]); // Removed latestPrograms from dependencies
+  }, [supabase, partnerId, id]);
 
   useEffect(() => {
     async function fetchPrograms() {
@@ -364,13 +369,6 @@ const DashboardPage: React.FC = () => {
 
     categorizeLeads();
   }, [leads, timeRange]);
-
-  useEffect(() => {
-    setReportNumbers((prev) => ({
-      ...prev,
-      activePrograms: latestPrograms.length,
-    }));
-  }, [latestPrograms]);
 
   const isAllDataZero = () => {
     return (
