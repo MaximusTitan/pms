@@ -8,6 +8,13 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table";
 
 interface Program {
   id: number;
@@ -30,18 +37,24 @@ const LatestPrograms: React.FC<LatestProgramsProps> = ({
         <CardTitle className="text-lg sm:text-xl">Latest Programs</CardTitle>
       </CardHeader>
       <CardContent>
-        <ul>
-          {latestPrograms.map((program) => (
-            <li key={program.id} className="py-2 border-b last:border-none">
-              <p className="font-semibold text-gray-800 dark:text-white text-sm sm:text-base">
-                {program.name}
-              </p>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-neutral-400">
-                Created At: {new Date(program.created_at).toLocaleDateString()}
-              </p>
-            </li>
-          ))}
-        </ul>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Created At</TableCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {latestPrograms.map((program) => (
+              <TableRow key={program.id}>
+                <TableCell>{program.name}</TableCell>
+                <TableCell>
+                  {new Date(program.created_at).toLocaleDateString()}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
       <CardFooter>
         <Button

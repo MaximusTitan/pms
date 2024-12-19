@@ -28,6 +28,8 @@ interface Lead {
   hs_lead_status: string | null;
   create_date: string | null;
   partner_id: string | null;
+  kid_s_name: string | null;
+  kid_s_grade: string | null;
   // ...other fields...
 }
 

@@ -8,12 +8,20 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@/components/ui/table"; // Import shadcn table components
 
 interface Lead {
   id: number;
   first_name: string;
   last_name: string;
-  email: string;
+  kid_s_name: string; // Added Kid's Name
+  create_date: string; // Added Date
 }
 
 interface LatestLeadsProps {
@@ -28,20 +36,30 @@ const LatestLeads: React.FC<LatestLeadsProps> = ({ latestLeads, router }) => {
         <CardTitle className="text-lg sm:text-xl">Latest Leads</CardTitle>
       </CardHeader>
       <CardContent>
-        <ul>
-          {latestLeads
-            .filter((lead) => lead.first_name)
-            .map((lead) => (
-              <li key={lead.id} className="py-2 border-b last:border-none">
-                <p className="font-semibold text-gray-800 dark:text-white text-sm sm:text-base">
-                  {lead.first_name} {lead.last_name}
-                </p>
-                <p className="text-xs sm:text-sm text-gray-600 dark:text-neutral-400">
-                  Email: {lead.email}
-                </p>
-              </li>
-            ))}
-        </ul>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Kid&apos;s Name</TableCell>
+              <TableCell>Date</TableCell>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {latestLeads
+              .filter((lead) => lead.first_name)
+              .map((lead) => (
+                <TableRow key={lead.id}>
+                  <TableCell>
+                    {lead.first_name} {lead.last_name}
+                  </TableCell>
+                  <TableCell>{lead.kid_s_name}</TableCell>
+                  <TableCell>
+                    {new Date(lead.create_date).toLocaleDateString()}
+                  </TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
+        </Table>
       </CardContent>
       <CardFooter>
         <Button

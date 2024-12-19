@@ -48,15 +48,12 @@ interface Lead {
   kid_s_grade: string | null;
   lead_source: string | null;
   hs_lead_status: string | null;
-  orientation_schedule: string | null;
-  demo_time: string | null;
 }
 
 // Define all possible columns
 const ALL_COLUMNS: (keyof Lead)[] = [
   "create_date",
   "first_name",
-  "last_name",
   "phone",
   "email",
   "city",
@@ -66,10 +63,34 @@ const ALL_COLUMNS: (keyof Lead)[] = [
   "lead_source",
   "partner_id",
   "hs_lead_status",
-  "orientation_schedule",
 ];
 
 const client = createClient();
+
+// Add this helper function before the LeadsPage component
+const getColumnDisplayName = (column: keyof Lead): string => {
+  const displayNames: Record<keyof Lead, string> = {
+    create_date: "Date Created",
+    first_name: "Name",
+    last_name: "Last Name",
+    phone: "Phone Number",
+    email: "Email Address",
+    city: "City",
+    school_district: "School District",
+    kid_s_name: "Kid's Name",
+    kid_s_grade: "Kid's Grade",
+    lead_source: "Lead Source",
+    partner_id: "Partner ID",
+    hs_lead_status: "Lead Status",
+    id: "ID",
+    last_modified_date: "Last Modified",
+    raw_data: "Raw Data",
+  };
+  return (
+    displayNames[column] ||
+    column.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase())
+  );
+};
 
 const LeadsPage: React.FC = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -146,7 +167,10 @@ const LeadsPage: React.FC = () => {
         lead.first_name.toLowerCase().includes(search.toLowerCase())) ||
       (lead.last_name &&
         lead.last_name.toLowerCase().includes(search.toLowerCase())) ||
-      (lead.email && lead.email.toLowerCase().includes(search.toLowerCase()))
+      (lead.email && lead.email.toLowerCase().includes(search.toLowerCase())) ||
+      (lead.kid_s_name &&
+        lead.kid_s_name.toLowerCase().includes(search.toLowerCase())) ||
+      (lead.phone && lead.phone.toLowerCase().includes(search.toLowerCase()))
   );
 
   const totalPages = Math.ceil(filteredLeads.length / itemsPerPage);
@@ -204,6 +228,10 @@ const LeadsPage: React.FC = () => {
     );
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    setSelectedColumns(checked ? ALL_COLUMNS : []);
+  };
+
   if (loading) return <p className="p-4 text-center">Loading leads...</p>;
   if (error)
     return <p className="p-4 text-center text-red-500">Error: {error}</p>;
@@ -233,6 +261,17 @@ const LeadsPage: React.FC = () => {
             <DropdownMenuContent className="w-56">
               <DropdownMenuLabel>Select Columns</DropdownMenuLabel>
               <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="select-all"
+                    checked={selectedColumns.length === ALL_COLUMNS.length}
+                    onCheckedChange={handleSelectAll}
+                  />
+                  <Label htmlFor="select-all">Select All</Label>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               {ALL_COLUMNS.map((column) => (
                 <DropdownMenuItem
                   key={column}
@@ -244,8 +283,8 @@ const LeadsPage: React.FC = () => {
                       checked={selectedColumns.includes(column)}
                       onCheckedChange={() => handleColumnToggle(column)}
                     />
-                    <Label htmlFor={column} className="capitalize">
-                      {column.replace(/_/g, " ")}
+                    <Label htmlFor={column}>
+                      {getColumnDisplayName(column)}
                     </Label>
                   </div>
                 </DropdownMenuItem>
@@ -281,13 +320,9 @@ const LeadsPage: React.FC = () => {
                                 ? "Lead Source Drilldown"
                                 : field === "hs_lead_status"
                                   ? "Lead Status"
-                                  : field === "orientation_schedule"
-                                    ? "Notes"
-                                    : field
-                                        .replace(/_/g, " ")
-                                        .replace(/\b\w/g, (l) =>
-                                          l.toUpperCase()
-                                        )}
+                                  : field
+                                      .replace(/_/g, " ")
+                                      .replace(/\b\w/g, (l) => l.toUpperCase())}
                   {renderSortIcon(field)}
                 </TableHead>
               ))}
@@ -306,7 +341,12 @@ const LeadsPage: React.FC = () => {
                         </div>
                       </>
                     ) : field === "first_name" ? (
-                      `${lead.first_name || ""} ${lead.last_name || ""}`.trim()
+                      <div className="flex flex-col">
+                        <span>
+                          {`${lead.first_name || ""} ${lead.last_name || ""}`.trim() ||
+                            "-"}
+                        </span>
+                      </div>
                     ) : (
                       lead[field] || ""
                     )}

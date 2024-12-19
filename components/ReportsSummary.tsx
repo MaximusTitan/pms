@@ -8,6 +8,14 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
 
 interface ReportsSummaryProps {
   reportNumbers: {
@@ -29,24 +37,44 @@ const ReportsSummary: React.FC<ReportsSummaryProps> = ({
         <CardTitle className="text-lg sm:text-xl">Reports Summary</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
-          <p className="text-gray-800 dark:text-white text-sm sm:text-base">
-            <span className="font-semibold">Total Leads:</span>{" "}
-            {reportNumbers.totalLeads}
-          </p>
-          <p className="text-gray-800 dark:text-white text-sm sm:text-base">
-            <span className="font-semibold">Total Demos:</span>{" "}
-            {reportNumbers.totalDemos}
-          </p>
-          <p className="text-gray-800 dark:text-white text-sm sm:text-base">
-            <span className="font-semibold">Total Sales:</span>{" "}
-            {reportNumbers.totalSales}
-          </p>
-          <p className="text-gray-800 dark:text-white text-sm sm:text-base">
-            <span className="font-semibold">Active Programs:</span>{" "}
-            {reportNumbers.activePrograms}
-          </p>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Metric</TableHead>
+              <TableHead>Count</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell>
+                <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-4" />
+                Total Leads
+              </TableCell>
+              <TableCell>{reportNumbers.totalLeads}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>
+                <span className="inline-block w-2 h-2 bg-rose-500 rounded-full mr-4" />
+                Total Demos
+              </TableCell>
+              <TableCell>{reportNumbers.totalDemos}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>
+                <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-4" />
+                Total Sales
+              </TableCell>
+              <TableCell>{reportNumbers.totalSales}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell>
+                <span className="inline-block w-2 h-2 bg-yellow-500 rounded-full mr-4" />
+                Active Programs
+              </TableCell>
+              <TableCell>{reportNumbers.activePrograms}</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
       </CardContent>
       <CardFooter>
         <Button
