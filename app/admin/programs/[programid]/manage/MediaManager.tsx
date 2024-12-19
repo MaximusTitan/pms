@@ -132,8 +132,14 @@ const MediaManager: React.FC<MediaManagerProps> = ({
     setIsFullScreen(true);
   };
 
+  const getDownloadUrl = (url: string) => {
+    const filename = url.split("/").pop();
+    return `${url}?download=${filename}`;
+  };
+
   const handleDownload = (url: string) => {
-    window.open(url, "_blank");
+    const downloadUrl = getDownloadUrl(url);
+    window.open(downloadUrl, "_blank");
   };
 
   return (

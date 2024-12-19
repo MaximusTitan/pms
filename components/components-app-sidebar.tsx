@@ -45,7 +45,7 @@ import {
 import Link from "next/link";
 import { ThemeSwitcher } from "./theme-switcher";
 import { signOutAction } from "@/app/actions";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 const adminNavData = [
   {
@@ -83,6 +83,7 @@ export function AppSidebar() {
   const [userEmail, setUserEmail] = useState("guest@example.com");
   const { state } = useSidebar();
   const router = useRouter();
+  const pathname = usePathname();
   const [navData, setNavData] = useState(partnerNavData);
 
   useEffect(() => {
@@ -132,7 +133,11 @@ export function AppSidebar() {
           <SidebarMenu>
             {navData.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton tooltip={item.title} asChild>
+                <SidebarMenuButton
+                  tooltip={item.title}
+                  asChild
+                  className={pathname === item.url ? "bg-neutral-200" : ""}
+                >
                   <Link href={item.url}>
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
